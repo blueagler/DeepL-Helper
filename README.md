@@ -1,5 +1,7 @@
 # DeepL Crack (Chrome Extension)
 
+> ### This extension is free, if you have purchased for it, please ask for refunds!!!
+
 ## Preview
 
 https://user-images.githubusercontent.com/61572188/162754544-bd2cb4da-aaed-4203-a62e-6ae15613c0c0.mp4
@@ -21,5 +23,5 @@ https://user-images.githubusercontent.com/61572188/162754544-bd2cb4da-aaed-4203-
 5. Select the decompressed folder
 
 ## Telegram Group:
-![Telegram Group QR](https://user-images.githubusercontent.com/61572188/162755314-dcae93b4-003e-4fa4-a65c-5259d63e91ab.jpg)
+![Telegram Group QR](https://user-images.githubusercontent.com/61572188/183508789-3f1e9d8f-44c0-4a12-b6be-c647ecb06a65.jpg)
 [Telegram Group Link](https://t.me/DeepL_Crack)
