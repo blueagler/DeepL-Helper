@@ -1,6 +1,6 @@
 # DeepL Crack (Chrome Extension)
 
-> ### This extension is free, if you have purchased for it, please ask for refunds!!! 这里我要挂一个闲鱼倒卖的🐶 - 用户名:八齿i; 姓名: 吴泽波; 手机号: 13433378204; 性别: 男; 年龄: 22岁; 地区: 广东省深圳市宝安区
+> ### This extension is free, if you have purchased for it, please ask for refunds!!! 这里我要挂一个闲鱼倒卖🐶 - 用户名:Hixdhfmb; 姓名: 吴泽波; 手机号: 13433378204; 性别: 男; 年龄: 22岁; 地区: 广东省深圳市宝安区 (原汕头人); 微博地址: https://www.weibo.com/u/6617622608; 生日: 2000年7月29日 (22岁); 获利超过410人民币
 
 ## Preview
 
