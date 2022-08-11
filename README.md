@@ -2,9 +2,9 @@
 
 > ### This extension is free, if you have purchased for it, please ask for refunds
 
-## Preview
+## Preview (Show Unlimited text translation & Decrypte Translated Document)
 
-https://user-images.githubusercontent.com/61572188/162754544-bd2cb4da-aaed-4203-a62e-6ae15613c0c0.mp4
+https://user-images.githubusercontent.com/61572188/184110752-02baf867-46d1-4d81-a228-802317df9780.mov
 
 ## Features
 
