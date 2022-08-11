@@ -1,6 +1,6 @@
 # DeepL Crack (Chrome Extension)
 
-> ### This extension is free, if you have purchased for it, please ask for refunds!!!
+> ### This extension is free, if you have purchased for it, please ask for refunds
 
 ## Preview
 
@@ -9,10 +9,11 @@ https://user-images.githubusercontent.com/61572188/162754544-bd2cb4da-aaed-4203-
 ## Features
 
 - Unlimited text translation (Bypass the free translator's limit of 5,000 characters)
+- Decrypte Translated Document (Crack Edit) (Auto hijack download action but you can also decrypte local documents)
 - Formal/informal tone (Available for Dutch, French, German, Italian, Polish, Portuguese, Portuguese (Brazilian), Russian, and Spanish.)
 - Glossary (Choose how words and phrases are translated by creating your own glossary)
 
-> ### File Translate Limit isn't cracked
+> ### File Translate Limited Amount Per IP isn't cracked due to the server verification
 
 ## Installation tutorial:
 
