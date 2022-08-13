@@ -11,7 +11,6 @@ https://user-images.githubusercontent.com/61572188/184110752-02baf867-46d1-4d81-
 - Unlimited text translation (Bypass the free translator's limit of 5,000 characters)
 - Decrypte Translated Document (Remove edit restriction) (It will automatically hijack the download action but you can also upload local documents to decrypt)
 - Formal/informal tone (Available for Dutch, French, German, Italian, Polish, Portuguese, Portuguese (Brazilian), Russian, and Spanish.)
-- Glossary (Choose how words and phrases are translated by creating your own glossary)
 
 > ### Note that "unlimited" does not mean that DeepL will not ban your IP due to high frequency of requests.
 > ### File Translate Amount Per IP isn't cracked due to the server verification.
