@@ -5,7 +5,7 @@ https://user-images.githubusercontent.com/61572188/184110752-02baf867-46d1-4d81-
 
 > ### This extension is free, if you have purchased for it, please ask for refunds
 > ### Note that "unlimited" does not mean that DeepL will not ban your IP due to high frequency of requests.
-> ### File Translate Limits isn't cracked due to the server verification. 
+> ### File Translate Quota & Character Limit isn't cracked due to the server verification. (由于服务器验证，文件翻译配额和字符限制未被破解。)
 
 ## Features
 
