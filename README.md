@@ -4,14 +4,16 @@
 https://user-images.githubusercontent.com/61572188/184110752-02baf867-46d1-4d81-a228-802317df9780.mov
 
 > ### This extension is free, if you have purchased for it, please ask for refunds
-> ### Note that "unlimited" does not mean that DeepL will not ban your IP due to high frequency of requests.
-> ### File Translate Quota & Character Limit isn't cracked due to the server verification. (由于服务器验证，文件翻译配额和字符限制未被破解。)
+> ### DeepL may ban your IP due to high frequency of requests. You can try to clean cookies and change IP
+> ### If you can't translate too much text, you can break up your text and paste it one by one
+> ### File Translation isn't cracked due to the server verification.
 
 ## Features
 
 - Bypass the free translator's limit of 5,000 characters
-- Remove edit restriction (available for docx, doc, ppt, pptx)
+- Remove edit restriction (available for docx, doc, ppt, pptx, pdf)
 - Formal/informal tone
+- Randonmize fingerprint
 
 ## Installation tutorial:
 
