@@ -1,0 +1,48 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "url": "https://serverless.blueagle.top/deepl-crack/get-client-state"
+      }
+    },
+    "condition": {
+      "regexFilter": "^https:\/\/(.*).deepl.com\/web(.*)method=getClientState",
+      "resourceTypes": [
+        "xmlhttprequest"
+      ]
+    }
+  },
+  {
+    "id": 2,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "responseHeaders": [
+        {
+          "header": "Access-Control-Allow-Origin",
+          "operation": "set",
+          "value": "https://www.deepl.com"
+        },
+        {
+          "header": "Access-Control-Allow-Methods",
+          "operation": "set",
+          "value": "GET, POST, OPTIONS"
+        },
+        {
+          "header": "Access-Control-Allow-Headers",
+          "operation": "set",
+          "value": "content-type, Authorization"
+        }
+      ]
+    },
+    "condition": {
+      "urlFilter": "api-free.deepl.com",
+      "resourceTypes": [
+        "xmlhttprequest"
+      ]
+    }
+  }
+]

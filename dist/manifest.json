@@ -1,0 +1,56 @@
+{
+  "name": "DeepL Crack",
+  "version": "1.1.2",
+  "description": "Unlock DeepL Pro features: character limit, document editing",
+  "manifest_version": 3,
+  "action": {},
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "redirect",
+        "enabled": true,
+        "path": "redirect.json"
+      }
+    ]
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "deepl.js",
+        "inject.js"
+      ],
+      "matches": [
+        "*://*.deepl.com/*"
+      ]
+    }
+  ],
+  "content_scripts": [
+    {
+      "js": [
+        "inject.js"
+      ],
+      "matches": [
+        "*://*.deepl.com/*"
+      ],
+      "all_frames": true,
+      "run_at": "document_start"
+    }
+  ],
+  "permissions": [
+    "declarativeNetRequest",
+    "cookies"
+  ],
+  "host_permissions": [
+    "*://*.deepl.com/*"
+  ],
+  "icons": {
+    "16": "images/deepl_16.png",
+    "32": "images/deepl_32.png",
+    "48": "images/deepl_48.png",
+    "128": "images/deepl_128.png"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  }
+}
