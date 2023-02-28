@@ -1,28 +1,34 @@
-# DeepL Crack (Chrome Extension)
+# DeepL Crack (Chromium Extension)
+![GitHub stars](https://img.shields.io/github/stars/blueagler/DeepL-Crack?style=flat)
 
 ## Preview
-https://user-images.githubusercontent.com/61572188/184110752-02baf867-46d1-4d81-a228-802317df9780.mov
-
-> ### This extension is free, if you have purchased for it, please ask for refunds
-> ### DeepL may ban your IP due to high frequency of requests. You can try to clean cookies and change IP
-> ### If you can't translate too much text, you can break up your text and paste it one by one
-> ### File Translation isn't cracked due to the server verification.
+https://user-images.githubusercontent.com/61572188/221816073-67c11553-1387-43a1-803c-bbc0692333d7.mov
 
 ## Features
-
 - Bypass the free translator's limit of 5,000 characters
 - Remove edit restriction (available for docx, doc, ppt, pptx, pdf)
-- Formal/informal tone
+- Use DeepL Pro Account Cookies/DeepL Api Free Token to translate. This can help you bypass frequency limitations of web api
+- Unlock Formal/informal tone
 - Randonmize fingerprint
 
-## Installation tutorial:
+## Limitations
+> ### DeepL may ban your IP due to high frequency of requests to web api. There are 2 solutions:
+> - Use DeepL Pro Account Cookies/DeepL Api Free Token to translate.
+> - Use a proxy to change IP.
+> ### File translation quota and maximum upload size of 5 MB are not cracked due to server verification.
+> ### Edge users should disable Advanced Security for deepl.com so that this extension can unlock PDF.
 
-1. Go to [release page](https://github.com/blueagler/DeepL-Crack/releases) and download the latest version (DeepL Crack v?)
-2. Decompress it
+## Installation tutorial
+1. Go to [release page](https://github.com/blueagler/DeepL-Crack/releases) and download the latest version (e.g. DeepL Crack v1.0.0.zip)
+2. Decompress this zip file
 3. Go to Chrome's plug-in settings page
-4. Click to load the decompressed plug-in
-5. Select the decompressed folder
+4. Enable developer mode
+5. Click to load the decompressed plug-in
+6. Select the decompressed folder
 
-## Telegram Group:
-![Telegram Group QR](https://user-images.githubusercontent.com/61572188/183508789-3f1e9d8f-44c0-4a12-b6be-c647ecb06a65.jpg)
-[Telegram Group Link](https://t.me/DeepL_Crack)
+## How it works
+This extension is made with Preact and material-ui. It hijacks XMLHttpRequest. It use WebAssembly to unlock PDF files. 
+
+## Telegram Channel & Group
+<a href="https://t.me/DeepL_Crack_Announcement"><img src="https://user-images.githubusercontent.com/61572188/221822226-47c6469b-06b6-4151-9ad6-36a3da10b2b7.jpg" width="300px"/></a>
+<a href="https://t.me/DeepL_Crack"><img src="https://user-images.githubusercontent.com/61572188/221823275-8ff3b6a7-cf00-438e-800a-050bd96bdadc.jpg" width="300px"/></a>
