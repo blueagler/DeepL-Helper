@@ -50,7 +50,13 @@ export function sendMessage(message) {
           reject(new Error(`Unexpected response from background script.`));
         }
       } else {
-        reject(payload.error);
+        if (payload.errors) {
+          reject(payload.errors);
+        } else if (payload.error) {
+          reject(payload.error);
+        } else {
+          reject(new Error(`Unexpected response from background script.`));
+        }
       }
     }, { once: true });
     window.dispatchEvent(new CustomEvent("DeepL-Crack-Send", { detail: message }));

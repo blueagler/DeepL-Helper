@@ -52,10 +52,12 @@ export const openRules = [
     changeUrl: {
       type: 'handler',
       handler() {
-        if (store.tokenStore.getActiveToken) {
+        if (store.tokenStore.getActiveId?.type === 'deepl-api-free-token') {
           return 'https://api-free.deepl.com/v2/translate';
+        } else if (store.tokenStore.getActiveId?.type !== 'pro-session') {
+          return this.url.replace('api.deepl.com', 'www2.deepl.com');
         }
-        return this.url.replace('api.deepl.com', 'www2.deepl.com');
+        return this.url
       }
     }
   },
@@ -98,8 +100,7 @@ export const openRules = [
       switch (new URL(this.url).searchParams.get('method')) {
         case 'LMT_handle_jobs':
           enqueueSnackbar('Your translation failed due to that your input is too long. Please try again with a shorter text.', {
-            variant: 'error',
-            persist: true,
+            variant: 'error'
           });
           break;
       }
@@ -122,11 +123,12 @@ export const openRules = [
           }
           break;
       }
-      if (this.status === 429) {
-        enqueueSnackbar('Your translation failed due to the IP frequency limitation. Please try again later or use a proxy.', {
-          variant: 'error',
-          persist: true,
-        });
+      switch (this.status) {
+        case 429:
+          enqueueSnackbar('Your translation failed due to the IP frequency limitation. Please try again later or use a proxy.', {
+            variant: 'error'
+          });
+          break;
       }
     },
   },
@@ -135,8 +137,7 @@ export const openRules = [
     onErrorHandler() {
       store.cacheStore.setCache('longTextTranslation', 'failed');
       enqueueSnackbar('Your translation failed due to that your input is too long. Please try again with a shorter text.', {
-        variant: 'error',
-        persist: true,
+        variant: 'error'
       });
     },
     onLoadHandler() {
@@ -145,15 +146,56 @@ export const openRules = [
       switch (this.status) {
         case 429:
           enqueueSnackbar('Your translation failed due to the IP frequency limitation. Please try again later or use a proxy.', {
-            variant: 'error',
-            persist: true,
+            variant: 'error'
           });
           break;
         case 456:
-          enqueueSnackbar('The quota of this token has been used up. Please change your token. ', {
-            variant: 'error',
-            persist: true,
+          enqueueSnackbar('The quota of this DeepL Api Free Token has been used up. Please change your token. ', {
+            variant: 'error'
           });
+          break;
+        case 403:
+          enqueueSnackbar('This DeepL Api Free Token is invalid. Please change it. ', {
+            variant: 'error'
+          });
+          break;
+      }
+    },
+  },
+  {
+    match: /api.deepl.com\/jsonrpc/,
+    onErrorHandler() {
+      store.cacheStore.setCache('longTextTranslation', 'failed');
+    },
+    onLoadHandler() {
+      switch (new URL(this.url).searchParams.get('method')) {
+        case 'LMT_handle_jobs':
+          clearTimeout(window.dpt1);
+          store.cacheStore.setCache('longTextTranslation', this.status === 200 ? 'success' : 'failed');
+          break;
+        case 'LMT_split_text':
+          if (this.status !== 200) {
+            store.cacheStore.setCache('longTextTranslation', 'failed');
+          }
+          if (this.status === 200) {
+            window.dpt1 && clearTimeout(window.dpt1);
+            window.dpt1 = setTimeout(() => {
+              store.cacheStore.setCache('longTextTranslation', 'success')
+            }, 1000);
+          }
+          break;
+      }
+      switch (this.status) {
+        case 429:
+          enqueueSnackbar('Your translation failed due to the IP frequency limitation. Please try again later or use a proxy.', {
+            variant: 'error'
+          });
+          break;
+        case 403:
+          enqueueSnackbar('This Pro Session is invalid. Please change it. ', {
+            variant: 'error'
+          });
+          break;
       }
     },
   },
@@ -231,10 +273,13 @@ export const sendRules = [
       await sendMessage({
         method: 'setApiToken',
         params: {
-          token: store.tokenStore.getActiveToken?.token,
+          token: store.tokenStore.getActiveId?.token,
         }
       });
       const responseGetter = function () {
+        if (this.status !== 200) {
+          return `{"jsonrpc":"2.0","error":{"code":0,"message":"Check Your Token"}}`
+        }
         const result = JSON.parse(this.response);
         const response = {
           "jsonrpc": "2.0",
@@ -295,12 +340,11 @@ export const sendRules = [
   {
     matchUrl: /api\.deepl\.com\/jsonrpc/,
     async await() {
-      const cookie = "dl_session=aa348468-90a7-40a6-bfba-4ee725f48c00; ";
       await sendMessage({
         method: 'setHeader',
         params: {
           regexFilter: "^https://api\\.deepl\\.com/jsonrpc",
-          cookie,
+          cookie: `dl_session=${store.tokenStore.getActiveId?.session};`,
           id: 1
         }
       });

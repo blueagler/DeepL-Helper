@@ -14,6 +14,7 @@ import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import api from "utils/api";
 import { observe } from 'mobx';
+import { enqueueSnackbar } from 'notistack';
 
 const title = <Typography
   align='center'
@@ -24,6 +25,15 @@ const title = <Typography
   Announcement
 </Typography>;
 
+async function getAnnouncement() {
+  if (Date.now() - store.cacheStore.getPersistCache('lastGetAnnouncement') < 10800000) return;
+  try {
+    await api.getAnnouncement();
+    store.cacheStore.setPersistCache('lastGetAnnouncement', Date.now());
+  } catch (e) {
+    enqueueSnackbar(`Failed to get announcement: ${e.message}`, { variant: 'error' });
+  }
+}
 
 function Announcement() {
 
@@ -35,10 +45,18 @@ function Announcement() {
   useEffect(() => {
     const isHydratedListener = observe(configStore, 'isHydrated', ({ newValue }) => {
       if (newValue) {
-        api.getAnnouncement();
+        getAnnouncement();
         isHydratedListener();
       }
     });
+    const visibleListener = document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        getAnnouncement();
+      }
+    })
+    return () => {
+      document.removeEventListener('visibilitychange', visibleListener);
+    }
   }, [])
 
 

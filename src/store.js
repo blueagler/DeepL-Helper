@@ -1,4 +1,4 @@
-import { makeAutoObservable, runInAction } from 'mobx'
+import { makeAutoObservable } from 'mobx'
 import { makePersistable, isHydrated } from 'mobx-persist-store'
 import forage from 'utils/forage'
 
@@ -67,11 +67,11 @@ class CacheStore {
 
 class RootStore {
   constructor() {
-    this.configStore = new ConfigStore(this);
-    this.windowStore = new WindowStore(this);
-    this.documentStore = new DocumentStore(this);
     this.cacheStore = new CacheStore(this);
+    this.windowStore = new WindowStore(this);
     this.loadingStore = new LoadingStore(this);
+    this.configStore = new ConfigStore(this);
+    this.documentStore = new DocumentStore(this);
     this.tokenStore = new TokenStore(this);
   }
 }
@@ -241,20 +241,26 @@ class TokenStore {
     this.activeId = id;
   }
 
-  get getActiveToken() {
+  get getActiveId() {
     return this.tokens.find(t => t.id === this.activeId) || null;
   }
 
-  deleteToken(token) {
-    this.tokens = this.tokens.filter(t => t.token !== token);
+  deleteId(id) {
+    this.tokens = this.tokens.filter(t => t.id !== id);
   }
 
   get getTokenList() {
     return this.tokens.sort((a, b) => {
-      if (a.type === 'private' && b.type !== 'private') {
+      if (a.property === 'private' && b.property === 'public') {
         return -1;
       }
-      if (a.type !== 'private' && b.type === 'private') {
+      if (a.property === 'public' && b.property === 'private') {
+        return 1;
+      }
+      if (a.type === 'pro-session' && b.type === 'deepl-api-free-token') {
+        return -1;
+      }
+      if (a.type === 'deepl-api-free-token' && b.type === 'pro-session') {
         return 1;
       }
       if (a.validCharacter > b.validCharacter) {
@@ -268,18 +274,19 @@ class TokenStore {
   }
 
   addToken(token) {
-    if (this.tokens.find(t => t.token === token.token)) {
+    if (this.tokens.find(t => t.id === token.id)) {
       this.tokens = this.tokens.map(t => {
-        if (t.token === token.token) {
+        if (t.id === token.id) {
           return token;
         }
         return t;
-      });
+      })
     } else {
       this.tokens.push(token);
     }
   }
 
 }
+
 
 export default new RootStore();

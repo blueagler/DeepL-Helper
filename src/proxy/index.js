@@ -28,10 +28,13 @@ function getFileName() {
 let maxChars = 1000;
 
 function pasteHandler(e) {
-  if (store.tokenStore.getActiveToken?.token) {
+  if (store.tokenStore.getActiveId?.type === 'deepl-api-free-token') {
     maxChars = 5000;
-  } else {
-    maxChars = 1000;
+  } else if (store.tokenStore.getActiveId?.type !== 'pro-session') {
+    maxChars = null;
+  }
+  if (!maxChars) {
+    return;
   }
   if (store.cacheStore.getCache('longTextTranslation') === 'pending') {
     e.preventDefault();

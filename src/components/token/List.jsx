@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react'
+import { memo } from 'react'
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import IconButton from '@mui/material/IconButton';
@@ -21,20 +21,16 @@ export default memo(function () {
 
   const tokenStore = useLocalObservable(() => store.tokenStore);
 
-  const handleUseToken = useCallback((token) => {
-    tokenStore.setActiveId(token.id);
-  }, []);
-
   return (
     <Observer>
       {() =>
         <>
-          {tokenStore.getActiveToken?.token &&
+          {tokenStore.getActiveId?.id &&
             <ListItem
-              key={tokenStore.getActiveToken?.token}
+              key={tokenStore.getActiveId?.id}
               secondaryAction={
-                <Tooltip title="Stop using this token">
-                  <IconButton onClick={() => handleUseToken({ id: null })}>
+                <Tooltip title="Stop using this">
+                  <IconButton onClick={() => tokenStore.setActiveId(null)}>
                     <RemoveIcon />
                   </IconButton>
                 </Tooltip>
@@ -42,8 +38,8 @@ export default memo(function () {
             >
               {tokenIcon}
               <ListItemText
-                primary={`You are currently using ${tokenStore.getActiveToken?.id} (${tokenStore.getActiveToken?.type})`}
-                secondary={`Valid character: ${tokenStore.getActiveToken?.validCharacter}`}
+                primary={`Using ${tokenStore.getActiveId?.id} (${tokenStore.getActiveId?.type})`}
+                secondary={tokenStore.getActiveId?.validCharacter ? `Valid character: ${tokenStore.getActiveId?.validCharacter}` : null}
                 sx={{
                   animation: 'DeepL-Crack-Bounce-Animation 3s ease-in-out infinite'
                 }}
@@ -52,26 +48,36 @@ export default memo(function () {
           }
           <List
             sx={{
-              height: `${tokenStore.getActiveToken?.token ? 85 : 100}%`,
+              height: `${tokenStore.getActiveId?.id ? 85 : 100}%`,
               overflowY: 'scroll',
             }}
             subheader={title}
           >
             {(tokenStore.tokens ?? []).map((token, key) => (
               <ListItem
-                key={token?.token ?? key}
+                key={token?.id ?? key}
                 secondaryAction={
-                  <Tooltip title="Use this token">
-                    <IconButton onClick={() => handleUseToken(token)}>
-                      <AddIcon />
-                    </IconButton>
-                  </Tooltip>
+                  <>
+                    {
+                      token?.property === 'private' ?
+                        <Tooltip title="Delete this">
+                          <IconButton onClick={() => tokenStore.deleteId(token?.id)}>
+                            <RemoveIcon />
+                          </IconButton>
+                        </Tooltip> : null
+                    }
+                    <Tooltip title='Use this'>
+                      <IconButton onClick={() => tokenStore.setActiveId(token?.id)}>
+                        <AddIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </>
                 }
               >
                 {tokenIcon}
                 <ListItemText
                   primary={`${token?.id} (${token?.type})`}
-                  secondary={`Valid character: ${token?.validCharacter}`}
+                  secondary={token?.validCharacter ? `Valid character: ${token?.validCharacter}` : null}
                 />
               </ListItem>
             ))}

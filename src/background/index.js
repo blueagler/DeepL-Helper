@@ -144,7 +144,7 @@ async function setApiToken() {
 
 async function run(promises) {
   const results = [];
-  const error = [];
+  const errors = [];
 
   setTimeout(() => this.sendResponse({
     success: false,
@@ -155,21 +155,26 @@ async function run(promises) {
     try {
       results.push(await promise);
     } catch (e) {
-      error.push(e);
+      errors.push(e);
     }
   }
 
-  const response = {
-    success: error.length === 0
-  }
-  if (error) {
-    response.error = error;
+  const response = {};
+
+  if (errors.length > 0) {
+    if (errors.length === 1) {
+      response.error = errors[0];
+    } else {
+      response.errors = errors;
+    }
+    response.success = false;
   } else {
     if (results.length === 1) {
       response.result = results[0];
     } else {
       response.results = results;
     }
+    response.success = true;
   }
   this.sendResponse(response);
 }
