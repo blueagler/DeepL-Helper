@@ -9,7 +9,7 @@ https://user-images.githubusercontent.com/61572188/221816073-67c11553-1387-43a1-
 - Remove edit restriction (available for docx, doc, ppt, pptx, pdf)
 - Use DeepL Pro Account Cookies/DeepL Api Free Token to translate. This can help you bypass frequency limitations of web api
 - Unlock Formal/informal tone
-- Randonmize fingerprint
+- Randomize fingerprint
 
 ## Limitations
 > ### DeepL may ban your IP due to high frequency of requests to web api. There are 2 solutions:
