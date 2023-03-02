@@ -29,6 +29,11 @@ https://user-images.githubusercontent.com/61572188/221816073-67c11553-1387-43a1-
 ## How it works
 This extension is made with Preact and material-ui. It hijacks XMLHttpRequest. It use WebAssembly to unlock PDF files. 
 
+## Support me:
+<a href="https://www.buymeacoffee.com/blueagler"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" height="50" align="right"/></a>
+<img src="https://github.com/blueagler/blueagler/raw/main/assets/wechat_reward_code.JPG" height="400"/>
+<img src="https://github.com/blueagler/blueagler/raw/main/assets/alipay_reward_code.JPG" height="400"/>
+
 ## Telegram Channel & Group
 <a href="https://t.me/DeepL_Crack_Announcement"><img src="https://user-images.githubusercontent.com/61572188/221822226-47c6469b-06b6-4151-9ad6-36a3da10b2b7.jpg" width="300px"/></a>
 <a href="https://t.me/DeepL_Crack"><img src="https://user-images.githubusercontent.com/61572188/221823275-8ff3b6a7-cf00-438e-800a-050bd96bdadc.jpg" width="300px"/></a>
