@@ -7,9 +7,10 @@ https://user-images.githubusercontent.com/61572188/221816073-67c11553-1387-43a1-
 ## Features
 - Bypass the free translator's limit of 5,000 characters
 - Remove edit restriction (available for docx, doc, ppt, pptx, pdf)
+- Remove DeepL Pro Banner for docx, doc, ppt, pptx files
 - Use DeepL Pro Account Cookies/DeepL Api Free Token to translate. This can help you bypass frequency limitations of web api
 - Unlock Formal/informal tone
-- Randomize fingerprint
+- Clean cookie and fake random fingerprint
 
 ## Limitations
 > ### DeepL may ban your IP due to high frequency of requests to web api. There are 2 solutions:
@@ -19,7 +20,7 @@ https://user-images.githubusercontent.com/61572188/221816073-67c11553-1387-43a1-
 > ### Edge users should disable Advanced Security for deepl.com so that this extension can unlock PDF.
 
 ## Installation tutorial
-1. Go to [release page](https://github.com/blueagler/DeepL-Crack/releases) and download the latest version (e.g. DeepL Crack v1.0.0.zip)
+1. Go to [release page](https://github.com/blueagler/DeepL-Crack/releases) and download the latest version (e.g. DeepL Crack v1.1.8.zip)
 2. Decompress this zip file
 3. Go to Chrome's plug-in settings page
 4. Enable developer mode
