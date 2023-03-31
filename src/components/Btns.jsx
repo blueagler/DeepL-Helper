@@ -11,12 +11,40 @@ import { injectAnalytic } from "analytic";
 
 const Wrapper = styled(Stack)({
   float: 'right',
-  '@media (max-width: 680px)': {
+  '@media (max-width: 840px)': {
     float: 'initial',
     width: '100%',
     marginBottom: '24px'
   }
 });
+
+function createContainerElement() {
+  const div = document.createElement('div');
+  injectAnalytic();
+  return div;
+}
+
+function renderButton(btn, key) {
+  if (!btn.show) return null;
+
+  return (
+    <Tooltip
+      key={btn.label ?? key}
+      title={btn.label}
+    >
+      <Fab
+        onClick={btn.onClick}
+        color="primary"
+        aria-label={btn.label}
+        sx={{
+          animation: btn.bounce ? 'DeepL-Crack-Bounce-Animation 3s ease-in-out infinite' : 'none',
+        }}
+      >
+        {btn.icon}
+      </Fab>
+    </Tooltip>
+  );
+}
 
 function Btns({ btns }) {
 
@@ -25,8 +53,7 @@ function Btns({ btns }) {
   useEffect(() => {
     waitForSelector('#dl_translator')
       .then((el) => {
-        injectAnalytic();
-        const div = document.createElement('div');
+        const div = createContainerElement();
         el.prepend(div);
         setContainer(div);
       });
@@ -41,29 +68,7 @@ function Btns({ btns }) {
         justifyContent="space-evenly"
       >
         {
-          (btns ?? []).map((btn, key) => {
-
-            if (!btn.show) return null
-
-            return (
-              <Tooltip
-                key={btn.label ?? key}
-                title={btn.label}
-              >
-                <Fab
-                  onClick={btn.onClick}
-                  color="primary"
-                  aria-label={btn.label}
-                  sx={{
-                    animation: btn.bounce ? 'DeepL-Crack-Bounce-Animation 3s ease-in-out infinite' : 'none',
-                  }}
-                >
-                  {btn.icon}
-                </Fab>
-              </Tooltip>
-
-            )
-          })
+          (btns ?? []).map(renderButton)
         }
       </Wrapper>
     </Portal> : null

@@ -52,9 +52,9 @@ export const openRules = [
     changeUrl: {
       type: 'handler',
       handler() {
-        if (store.tokenStore.getActiveId?.type === 'deepl-api-free-token') {
+        if (store.tokenStore.getActiveToken?.type === 'deepl-api-free-token') {
           return 'https://api-free.deepl.com/v2/translate';
-        } else if (store.tokenStore.getActiveId?.type !== 'pro-session') {
+        } else if (store.tokenStore.getActiveToken?.type !== 'pro-session') {
           return this.url.replace('api.deepl.com', 'www2.deepl.com');
         }
         return this.url
@@ -96,36 +96,18 @@ export const openRules = [
   {
     match: /www2\.deepl\.com\/jsonrpc/,
     onErrorHandler() {
-      store.cacheStore.setCache('longTextTranslation', 'failed');
       switch (new URL(this.url).searchParams.get('method')) {
         case 'LMT_handle_jobs':
-          enqueueSnackbar('Your translation failed due to that your input is too long. Please try again with a shorter text.', {
+          enqueueSnackbar('Translation failed due to that your input is too long. Please try again with a shorter text.', {
             variant: 'error'
           });
           break;
       }
     },
     onLoadHandler() {
-      switch (new URL(this.url).searchParams.get('method')) {
-        case 'LMT_handle_jobs':
-          clearTimeout(window.dpt1);
-          store.cacheStore.setCache('longTextTranslation', this.status === 200 ? 'success' : 'failed');
-          break;
-        case 'LMT_split_text':
-          if (this.status !== 200) {
-            store.cacheStore.setCache('longTextTranslation', 'failed');
-          }
-          if (this.status === 200) {
-            window.dpt1 && clearTimeout(window.dpt1);
-            window.dpt1 = setTimeout(() => {
-              store.cacheStore.setCache('longTextTranslation', 'success')
-            }, 1000);
-          }
-          break;
-      }
       switch (this.status) {
         case 429:
-          enqueueSnackbar('Your translation failed due to the IP frequency limitation. Please try again later or use a proxy.', {
+          enqueueSnackbar('Reached IP frequency limitation of free web api. You can try again later, use a proxy, or use a token/seesion in Token Manager. ', {
             variant: 'error'
           });
           break;
@@ -135,17 +117,14 @@ export const openRules = [
   {
     match: /api-free.deepl.com\/v2\/translate/,
     onErrorHandler() {
-      store.cacheStore.setCache('longTextTranslation', 'failed');
-      enqueueSnackbar('Your translation failed due to that your input is too long. Please try again with a shorter text.', {
+      enqueueSnackbar('Translation failed due to that your input is too long. Please try again with a shorter text.', {
         variant: 'error'
       });
     },
     onLoadHandler() {
-      window.dpt1 && clearTimeout(window.dpt1);
-      store.cacheStore.setCache('longTextTranslation', this.status === 200 ? 'success' : 'failed');
       switch (this.status) {
         case 429:
-          enqueueSnackbar('Your translation failed due to the IP frequency limitation. Please try again later or use a proxy.', {
+          enqueueSnackbar('Translation failed due to the IP frequency limitation. Please try again later or use a proxy.', {
             variant: 'error'
           });
           break;
@@ -164,30 +143,10 @@ export const openRules = [
   },
   {
     match: /api.deepl.com\/jsonrpc/,
-    onErrorHandler() {
-      store.cacheStore.setCache('longTextTranslation', 'failed');
-    },
     onLoadHandler() {
-      switch (new URL(this.url).searchParams.get('method')) {
-        case 'LMT_handle_jobs':
-          clearTimeout(window.dpt1);
-          store.cacheStore.setCache('longTextTranslation', this.status === 200 ? 'success' : 'failed');
-          break;
-        case 'LMT_split_text':
-          if (this.status !== 200) {
-            store.cacheStore.setCache('longTextTranslation', 'failed');
-          }
-          if (this.status === 200) {
-            window.dpt1 && clearTimeout(window.dpt1);
-            window.dpt1 = setTimeout(() => {
-              store.cacheStore.setCache('longTextTranslation', 'success')
-            }, 1000);
-          }
-          break;
-      }
       switch (this.status) {
         case 429:
-          enqueueSnackbar('Your translation failed due to the IP frequency limitation. Please try again later or use a proxy.', {
+          enqueueSnackbar('Translation failed due to the IP frequency limitation. Please try again later or use a proxy.', {
             variant: 'error'
           });
           break;
@@ -203,7 +162,7 @@ export const openRules = [
     match: /^https:\/\/backend.deepl.com\/documentTranslation\?method=getTranslationStatus/,
     onLoadHandler() {
       if (this.status == 400 && JSON.parse(this.responseText).error.code == 800) {
-        enqueueSnackbar('Your translation was blocked due to the limitation. Do you want to clean identifier cookies and try again? (Page will reload)', {
+        enqueueSnackbar('Translation was blocked due to the limitation. Do you want to clean identifier cookies and try again? (Page will reload). If it still does not work, you need to use a proxy to change your IP and click Clean Cookie Button again.', {
           action: () =>
             <Button
               onClick={() => {
@@ -234,9 +193,153 @@ export const sendRules = [
     }
   },
   {
+    matchUrl: /www2\.deepl\.com\/jsonrpc\?method=LMT_handle_jobs/,
+    async await() {
+      const maxTextLength = 1000;
+      function parseAndCheckPayload(payload) {
+        const parsedPayload = JSON.parse(payload);
+        const textLength = parsedPayload.params.jobs.map(job => job.sentences[0].text).join('').length;
+        return { parsedPayload, textLength };
+      }
+
+      function splitJobs(jobs) {
+        let batches = [];
+        for (const job of jobs) {
+          if (batches.length === 0) {
+            batches.push([job]);
+          } else {
+            const lastBatch = batches[batches.length - 1];
+            const lastBatchTextLength = lastBatch.map(job => job.sentences[0].text).join('').length;
+            if (lastBatchTextLength + job.sentences[0].text.length >= maxTextLength) {
+              batches.push([job]);
+            } else {
+              lastBatch.push(job);
+            }
+          }
+        }
+        return batches;
+      }
+
+      function getRandomNumber() {
+        const rand = Math.floor(Math.random() * 99999) + 100000;
+        return rand * 1000;
+      }
+
+      function getTimeStamp(translate_text) {
+        let iCount = translate_text.split('i').length - 1;
+        const ts = Date.now();
+        if (iCount !== 0) {
+          iCount = iCount + 1;
+          return ts - (ts % iCount) + iCount;
+        } else {
+          return ts;
+        }
+      }
+
+      function formatBody(payload, id, job) {
+        let r = JSON.stringify({
+          ...payload,
+          id,
+          params: {
+            ...payload.params,
+            jobs: job,
+            timestamp: getTimeStamp(job.map(job => job.sentences[0].text).join(''))
+          },
+        });
+        if ((id + 5) % 29 === 0 || (id + 3) % 13 === 0) {
+          r = r.replace('"method":"', '"method" : "');
+        } else {
+          r = r.replace('"method":"', '"method": "');
+        }
+        return r;
+      }
+
+      async function fetchTranslation(url, body) {
+        await sendMessage({
+          method: 'setHeader',
+          params: {
+            regexFilter: "^https://www2\\.deepl\\.com/jsonrpc",
+            id: 1
+          }
+        });
+        try {
+          const r = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body,
+          });
+          switch (r.status) {
+            case 200:
+              return await r.json();;
+            case 429:
+              throw new Error('Reached IP frequency limitation of free web api. You can try again later, use a proxy, or use a token/seesion in Token Manager. ');
+            default:
+              throw new Error('Unknown error.');
+          }
+        } catch (error) {
+          throw new Error(error);
+        }
+      }
+
+      function mergeResults(results) {
+        let mergedResult = null;
+        for (const result of results) {
+          if (mergedResult === null) {
+            mergedResult = result;
+          } else {
+            mergedResult.result.translations = [
+              ...mergedResult.result.translations,
+              ...result.result.translations
+            ]
+          }
+        }
+        return mergedResult;
+      }
+
+      function overrideProperties(result) {
+        this.DONNOTSEND = true;
+        Object.defineProperty(this, "responseText", {
+          get: function () {
+            return JSON.stringify(result);
+          }.bind(this),
+        })
+        Object.defineProperty(this, "readyState", {
+          get: () => this.DONE,
+        });
+        Object.defineProperty(this, "status", {
+          get: () => 200,
+        });
+        this.dispatchEvent(new Event('readystatechange'));
+      }
+
+      const { parsedPayload, textLength } = parseAndCheckPayload(this.payload);
+
+      if (textLength > maxTextLength) {
+        const batches = splitJobs(parsedPayload.params.jobs);
+        let results = [];
+        for (const batch of batches) {
+          const id = getRandomNumber();
+          const body = formatBody(parsedPayload, id, batch);
+          try {
+            const json = await fetchTranslation(this.url, body);
+            results.push(json);
+            enqueueSnackbar(`Batch ${batches.indexOf(batch) + 1} of ${batches.length} successfully translated.`, { variant: 'success' });
+          } catch (error) {
+            enqueueSnackbar(`Batch ${batches.indexOf(batch) + 1} of ${batches.length} failed to translate. Reason: ${error.message}`, { variant: 'error' });
+            break;
+          }
+        }
+        const mergedResult = mergeResults(results);
+        overrideProperties.call(this, mergedResult);
+      }
+    }
+  },
+  {
     matchUrl: /api-free.deepl.com\/v2\/translate/,
     async await() {
-      function rewritePayload(payload) {
+      function parsePayload(payload) {
         payload = JSON.parse(payload);
         let formality = "default";
         switch (payload.params.commonJobParams.formality) {
@@ -260,27 +363,25 @@ export const sendRules = [
         if (source_lang === 'auto') {
           source_lang = undefined
         }
+        const text = payload.params.jobs.map(job => job.sentences[0].text);
+        const target_lang = payload.params.lang.target_lang;
+        return { text, target_lang, source_lang, formality };
+      }
+      function createNewPayload(text, target_lang, source_lang, formality) {
         const newPayload = {
-          text: payload.params.jobs.map(job => job.sentences[0].text),
-          target_lang: payload.params.lang.target_lang,
+          text,
+          target_lang,
           source_lang,
           split_sentences: '0',
           formality
         };
         return JSON.stringify(newPayload);
       }
-      this.payload = rewritePayload(this.payload);
-      await sendMessage({
-        method: 'setApiToken',
-        params: {
-          token: store.tokenStore.getActiveId?.token,
-        }
-      });
-      const responseGetter = function () {
-        if (this.status !== 200) {
-          return `{"jsonrpc":"2.0","error":{"code":0,"message":"Check Your Token"}}`
-        }
-        const result = JSON.parse(this.response);
+      function rewritePayload(payload) {
+        const { text, target_lang, source_lang, formality } = parsePayload(payload);
+        return createNewPayload(text, target_lang, source_lang, formality);
+      }
+      function createResponse(result, payload) {
         const response = {
           "jsonrpc": "2.0",
           "id": 0,
@@ -299,16 +400,29 @@ export const sendRules = [
               ],
               "quality": "normal"
             })),
-            "target_lang": this.payload.target_lang,
+            "target_lang": payload.target_lang,
             "source_lang": result.translations[0].detected_source_language,
             "source_lang_is_confident": false,
             "detectedLanguages": {}
           }
         };
         return JSON.stringify(response)
-      }.bind(this);
+      }
+      this.payload = rewritePayload(this.payload);
+      await sendMessage({
+        method: 'setApiToken',
+        params: {
+          token: store.tokenStore.getActiveToken?.token,
+        }
+      });
       Object.defineProperty(this, "responseText", {
-        get: responseGetter,
+        get: function () {
+          if (this.status !== 200) {
+            return `{"jsonrpc":"2.0","error":{"code":0,"message":"Check Your Token"}}`
+          }
+          const result = JSON.parse(this.response);
+          return createResponse(result, this.payload)
+        }.bind(this),
       })
     }
   },
@@ -344,7 +458,7 @@ export const sendRules = [
         method: 'setHeader',
         params: {
           regexFilter: "^https://api\\.deepl\\.com/jsonrpc",
-          cookie: `dl_session=${store.tokenStore.getActiveId?.session};`,
+          cookie: `dl_session=${store.tokenStore.getActiveToken?.session};`,
           id: 1
         }
       });

@@ -25,27 +25,18 @@ function FileUploader({ handleDocumentChange }) {
 
   const [dragAnimation, setDragAnimation] = useState(false);
 
-  const handleDragEnter = useCallback((event) => {
+  const handleDragEvent = useCallback((event, isDragOver) => {
     event.preventDefault()
-    setDragAnimation(true)
-  }, [])
-
-  const handleDragOver = useCallback((event) => {
     event.stopPropagation()
-    event.preventDefault()
-    setDragAnimation(true)
+    setDragAnimation(isDragOver)
   }, [])
 
   const handleDrop = useCallback((event) => {
-    event.stopPropagation()
     event.preventDefault()
+    event.stopPropagation()
     if (event.dataTransfer.files) {
       handleDocumentChange(event.dataTransfer.files)
     }
-    setDragAnimation(false)
-  }, [])
-
-  const handleDragLeave = useCallback(() => {
     setDragAnimation(false)
   }, [])
 
@@ -54,10 +45,10 @@ function FileUploader({ handleDocumentChange }) {
 
   useEffect(() => {
     if (dragRef.current) {
-      dragRef.current.ondragenter = handleDragEnter
-      dragRef.current.ondragover = handleDragOver
+      dragRef.current.ondragenter = (event) => handleDragEvent(event, true)
+      dragRef.current.ondragover = (event) => handleDragEvent(event, true)
       dragRef.current.ondrop = handleDrop
-      dragRef.current.ondragleave = handleDragLeave
+      dragRef.current.ondragleave = (event) => handleDragEvent(event, false)
     }
   }, [dragRef.current])
 

@@ -74,6 +74,68 @@ function Document() {
     setHelpPopover(null);
   }, []);
 
+  const renderHelpPopover = () => (
+    <Popover
+      sx={{
+        pointerEvents: 'none',
+      }}
+      anchorOrigin={{
+        vertical: 'bottom',
+        horizontal: 'left',
+      }}
+      transformOrigin={{
+        vertical: 'top',
+        horizontal: 'right',
+      }}
+      open={Boolean(helpPopover)}
+      anchorEl={helpPopover}
+      onClose={handleHelpPopoverClose}
+      disableRestoreFocus
+    >
+      <Typography sx={{ p: 1 }}>
+        Currently, we support Pdf, Doc, Docx, PowerPoint, PowerPointx. The process of decryption is done on the clientside.
+      </Typography>
+    </Popover>
+  );
+
+  const renderFileUploader = () => (
+    <FullGrid item md={5} sm={12} sx={(theme) => ({
+      [theme.breakpoints.down('md')]: {
+        height: '20%'
+      }
+    })}>
+      <FileUploader handleDocumentChange={handleDocumentChange} />
+    </FullGrid>
+  );
+
+  const renderList = () => (
+    <FullGrid item md={7} sm={12} sx={(theme) => ({
+      [theme.breakpoints.down('md')]: {
+        height: '70%'
+      },
+    })}>
+      <List
+        list={documentStore.getDocumentList}
+        handleDownloadDocument={handleDownloadDocument}
+        handleDeleteDocument={handleDeleteDocument}
+        handleDecryptDocument={handleDecryptDocument} />
+    </FullGrid>
+  );
+
+  const renderDialogActions = () => (
+    <DialogActions>
+      {
+        documentStore.getDocumentList.length > 0 &&
+        <Button onClick={handleCleanDocument}>
+          Clean Decrypted Documents
+        </Button>
+      }
+      <Button onClick={handleToggleDocument}>
+        Close
+      </Button>
+    </DialogActions>
+  );
+
   return (
     <Observer>{() =>
       <Dialog
@@ -99,61 +161,15 @@ function Document() {
         >
           <HelpIcon />
         </IconButton>
-        <Popover
-          sx={{
-            pointerEvents: 'none',
-          }}
-          anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'left',
-          }}
-          transformOrigin={{
-            vertical: 'top',
-            horizontal: 'right',
-          }}
-          open={Boolean(helpPopover)}
-          anchorEl={helpPopover}
-          onClose={handleHelpPopoverClose}
-          disableRestoreFocus
-        >
-          <Typography sx={{ p: 1 }}>
-            Currently, we support Pdf, Doc, Docx, PowerPoint, PowerPointx. The process of decryption is done on the client side.
-          </Typography>
-        </Popover>
+        {renderHelpPopover()}
         {title}
         <DialogContent>
           <FullGrid container>
-            <FullGrid item md={5} sm={12} sx={(theme) => ({
-              [theme.breakpoints.down('md')]: {
-                height: '20%'
-              }
-            })}>
-              <FileUploader handleDocumentChange={handleDocumentChange} />
-            </FullGrid>
-            <FullGrid item md={7} sm={12} sx={(theme) => ({
-              [theme.breakpoints.down('md')]: {
-                height: '70%'
-              },
-            })}>
-              <List
-                list={documentStore.getDocumentList}
-                handleDownloadDocument={handleDownloadDocument}
-                handleDeleteDocument={handleDeleteDocument}
-                handleDecryptDocument={handleDecryptDocument} />
-            </FullGrid>
+            {renderFileUploader()}
+            {renderList()}
           </FullGrid>
         </DialogContent>
-        <DialogActions>
-          {
-            documentStore.getDocumentList.length > 0 &&
-            <Button onClick={handleCleanDocument}>
-              Clean Decrypted Documents
-            </Button>
-          }
-          <Button onClick={handleToggleDocument}>
-            Close
-          </Button>
-        </DialogActions>
+        {renderDialogActions()}
       </Dialog>
     }</Observer>
   )

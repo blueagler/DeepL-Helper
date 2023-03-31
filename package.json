@@ -1,7 +1,8 @@
 {
   "name": "deepl-crack",
   "license": "GPL-3.0",
-  "version": "1.1.2",
+  "description": "A browser extension to crack DeepL's 5000 characters limit and unlock editing restrictions",
+  "version": "1.1.8",
   "scripts": {
     "build": "rollup --config rollup.config.prod.mjs && rollup --config rollup.config.background.prod.mjs",
     "dev": "rollup --config rollup.config.dev.mjs && rollup --config rollup.config.background.dev.mjs",
@@ -20,7 +21,8 @@
     "notistack": "3.0.0-alpha.11",
     "preact": "^10.11.3",
     "pretty-bytes": "^6.0.0",
-    "random-useragent": "0.5.0"
+    "random-useragent": "0.5.0",
+    "react-transition-group": "^4.4.5"
   },
   "devDependencies": {
     "@babel/core": "7.20.7",

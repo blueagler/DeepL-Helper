@@ -1,6 +1,7 @@
 import { makeAutoObservable } from 'mobx'
 import { makePersistable, isHydrated } from 'mobx-persist-store'
 import forage from 'utils/forage'
+import { uuid } from 'utils'
 
 class LoadingStore {
 
@@ -223,7 +224,7 @@ class TokenStore {
     makeAutoObservable(this);
     makePersistable(this, {
       name: 'DeepL-Crack-Token',
-      properties: ['tokens', 'activeId'],
+      properties: ['tokens', 'activeId', 'uuid'],
       storage: forage,
       stringify: false,
     })
@@ -237,12 +238,25 @@ class TokenStore {
 
   activeId = null;
 
+  uuid = null;
+
+  get getUUID() {
+    if (!this.uuid) {
+      this.uuid = uuid();
+    }
+    return this.uuid;
+  }
+
+  setUUID(uuid) {
+    this.uuid = uuid;
+  }
+
   setActiveId(id) {
     this.activeId = id;
   }
 
-  get getActiveId() {
-    return this.tokens.find(t => t.id === this.activeId) || null;
+  get getActiveToken() {
+    return this.tokens.find(t => t.id === this.activeId && t.status === 'valid') || null;
   }
 
   deleteId(id) {
@@ -271,6 +285,10 @@ class TokenStore {
       }
       return 0;
     })
+  }
+
+  removeAllRemoteTokens() {
+    this.tokens = this.tokens.filter(t => t.property === 'local');
   }
 
   addToken(token) {

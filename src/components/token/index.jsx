@@ -17,18 +17,140 @@ import Stack from '@mui/material/Stack';
 import api from "utils/api";
 import { observe } from 'mobx';
 import { enqueueSnackbar } from 'notistack';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import { uuid } from 'utils'
 
 const title = <DialogTitle>Token Manager</DialogTitle>;
 
-async function getPublicToken() {
-  if (Date.now() - store.cacheStore.getPersistCache('lastGetPublicToken') < 600000) return;
+async function getToken() {
+  if (Date.now() - store.cacheStore.getPersistCache('lastGetToken') < 600000) return;
   try {
-    await api.getPublicToken();
-    store.cacheStore.setPersistCache('lastGetPublicToken', Date.now());
+    await api.getToken();
+    store.cacheStore.setPersistCache('lastGetToken', Date.now());
   } catch (e) {
-    enqueueSnackbar(`Failed to get public token: ${e.message}`, { variant: 'error' });
+    enqueueSnackbar(`Failed to get token: ${e.message}`, { variant: 'error' });
   }
 }
+
+function handlePopoverOpen(setPopover) {
+  return useCallback((event) => {
+    setPopover(event.currentTarget);
+  }, []);
+}
+
+function handlePopoverClose(setPopover) {
+  return useCallback(() => {
+    setPopover(null);
+  }, []);
+}
+
+const NewTokenModel = memo(function ({ handleAddTokenPopoverClose, addTokenPopover, tokenStore }) {
+  const [addTokenType, setAddTokenType] = useState('deepl-api-free-token');
+  const [addTokenName, setAddTokenName] = useState('');
+  const [addToken, setAddToken] = useState('');
+  const handleSetAddTokenType = useCallback((e) => {
+    setAddTokenType(e.target.value);
+  }, []);
+  const handleSetAddTokenName = useCallback((e) => {
+    setAddTokenName(e.target.value);
+  }, []);
+  const handleSetAddToken = useCallback((e) => {
+    setAddToken(e.target.value);
+  }, []);
+  const saveToken = useCallback(() => {
+    tokenStore.addToken({
+      type: addTokenType,
+      property: 'local',
+      id: uuid(),
+      name: addTokenName,
+      status: 'valid',
+      [addTokenType === 'deepl-api-free-token' ? 'token' : 'session']: addToken,
+    });
+    handleAddTokenPopoverClose();
+    setAddTokenType('deepl-api-free-token');
+    setAddTokenName('');
+    setAddToken('');
+  }, [addTokenType, addToken]);
+
+  return (
+    <Popover
+      anchorOrigin={{
+        vertical: 'top',
+        horizontal: 'center',
+      }}
+      transformOrigin={{
+        vertical: 'bottom',
+        horizontal: 'center',
+      }}
+      open={Boolean(addTokenPopover)}
+      anchorEl={addTokenPopover}
+      onClose={handleAddTokenPopoverClose}
+    >
+      <Stack
+        spacing={2}
+        sx={{
+          minWidth: 500,
+          p: 2
+        }}
+      >
+        <TextField
+          select
+          label="Type"
+          value={addTokenType}
+          onChange={handleSetAddTokenType}
+          helperText="Please select your token type"
+          fullWidth
+        >
+          <MenuItem value='deepl-api-free-token'>
+            Deepl API Free Token
+          </MenuItem>
+          <MenuItem value='pro-session'>
+            Deepl Pro Account Session
+          </MenuItem>
+        </TextField>
+        <TextField label="Name" variant="outlined" helperText="This is the name of your token/session" onChange={handleSetAddTokenName} value={addTokenName} />
+        <TextField
+          label={addTokenType === 'deepl-api-free-token' ? 'Token' : 'Session'}
+          variant="outlined"
+          helperText={addTokenType === 'deepl-api-free-token' ? "e.g. af10af44-f658-5c9d-f3b0-0c1e0f4b2e6c:fx" : "e.g. 07958060-0c2a-fab4-5de4-4580c63da0e3"}
+          onChange={handleSetAddToken}
+          value={addToken}
+          fullWidth />
+        <Button variant="contained" onClick={saveToken} disabled={!(addTokenName && addToken)} fullWidth> Save </Button>
+      </Stack>
+    </Popover>
+  )
+}, (prev, next) => prev.addTokenPopover === next.addTokenPopover);
+
+const Help = memo(function ({ helpPopover, handleHelpPopoverClose }) {
+  return (
+    <Popover
+      sx={{
+        pointerEvents: 'none',
+      }}
+      anchorOrigin={{
+        vertical: 'bottom',
+        horizontal: 'left',
+      }}
+      transformOrigin={{
+        vertical: 'top',
+        horizontal: 'right',
+      }}
+      open={Boolean(helpPopover)}
+      anchorEl={helpPopover}
+      onClose={handleHelpPopoverClose}
+      disableRestoreFocus
+    >
+      <Typography sx={{ p: 1 }}>
+        Using DeepL Pro Account Cookies (pro-session)/DeepL Api Free Token to translate can help you bypass frequency limitations of free web api.
+        Sometimes I provide public tokens for free, but they are not guaranteed to be valid forever.
+        You can also use your own tokens/sessions.
+        I may provide you some private tokens/sessions for you.
+        DM me on Telegram(@Blueagler) or Email(austinliu@blueagle.top).
+      </Typography>
+    </Popover>
+  )
+}, (prev, next) => prev.helpPopover === next.helpPopover);
 
 function Token() {
 
@@ -38,73 +160,41 @@ function Token() {
   const handleToggleTokenWindow = useCallback(() => windowStore.toggleTokenWindow(), []);
 
   const [helpPopover, setHelpPopover] = useState(null);
-
-  const handleHelpPopoverOpen = useCallback((event) => {
-    setHelpPopover(event.currentTarget);
-  }, []);
-
-  const handleHelpPopoverClose = useCallback(() => {
-    setHelpPopover(null);
-  }, []);
+  const handleHelpPopoverOpen = handlePopoverOpen(setHelpPopover);
+  const handleHelpPopoverClose = handlePopoverClose(setHelpPopover);
 
   const [addTokenPopover, setAddTokenPopover] = useState(null);
+  const handleAddTokenPopoverOpen = handlePopoverOpen(setAddTokenPopover);
+  const handleAddTokenPopoverClose = handlePopoverClose(setAddTokenPopover);
 
-  const handleAddTokenPopoverOpen = useCallback((event) => {
-    setAddTokenPopover(event.currentTarget);
+  const handleCopyUUID = useCallback(() => {
+    navigator.clipboard.writeText(tokenStore.getUUID)
+      .then(() => enqueueSnackbar('UUID copied to clipboard', { variant: 'success' }))
+      .catch(() => alert(`Failed to copy UUID: ${tokenStore.getUUID}`));
+  }, [tokenStore.getUUID]);
+
+  const handleRefreshToken = useCallback(() => {
+    api.getToken()
+      .then(() => {
+        store.cacheStore.setPersistCache('lastGetToken', Date.now());
+        enqueueSnackbar('Token refreshed', { variant: 'success' })
+      });
   }, []);
-
-  const handleAddTokenPopoverClose = useCallback(() => {
-    setAddTokenPopover(null);
-  }, []);
-
-  const [addTokenType, setAddTokenType] = useState('deepl-api-free-token');
-  const [addTokenId, setAddTokenId] = useState('');
-  const [addToken, setAddToken] = useState('');
-  const [addSession, setAddSession] = useState('');
-
-  const handleSetAddTokenType = useCallback((e) => {
-    setAddTokenType(e.target.value);
-  }, []);
-
-  const handleSetAddTokenId = useCallback((e) => {
-    setAddTokenId(e.target.value);
-  }, []);
-
-  const handleSetAddToken = useCallback((e) => {
-    setAddToken(e.target.value);
-  }, []);
-
-  const handleSetAddSession = useCallback((e) => {
-    setAddSession(e.target.value);
-  }, []);
-
-  const saveToken = useCallback(() => {
-    tokenStore.addToken({
-      type: addTokenType,
-      property: 'private',
-      id: addTokenId,
-      [addTokenType === 'deepl-api-free-token' ? 'token' : 'session']: addTokenType === 'deepl-api-free-token' ? addToken : addSession,
-    });
-    handleAddTokenPopoverClose();
-    setAddTokenType('deepl-api-free-token');
-    setAddTokenId('');
-    setAddToken('');
-    setAddSession('');
-  }, [addTokenType, addToken, addSession]);
 
   useEffect(() => {
     const isHydratedListener = observe(tokenStore, 'isHydrated', ({ newValue }) => {
       if (newValue) {
-        getPublicToken();
+        getToken();
         isHydratedListener();
       }
     });
     const visibleListener = document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
-        getPublicToken();
+        getToken();
       }
     })
     return () => {
+      isHydratedListener();
       document.removeEventListener('visibilitychange', visibleListener);
     }
   }, [])
@@ -121,88 +211,42 @@ function Token() {
           }
         }}
       >
-        <IconButton
-          size="large"
+        <Stack
           sx={{
             position: 'absolute',
             top: 10,
             right: 10
           }}
-          onMouseEnter={handleHelpPopoverOpen}
-          onMouseLeave={handleHelpPopoverClose}
+          direction="row"
         >
-          <HelpIcon />
-        </IconButton>
-        <Popover
-          sx={{
-            pointerEvents: 'none',
-          }}
-          anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'left',
-          }}
-          transformOrigin={{
-            vertical: 'top',
-            horizontal: 'right',
-          }}
-          open={Boolean(helpPopover)}
-          anchorEl={helpPopover}
-          onClose={handleHelpPopoverClose}
-          disableRestoreFocus
-        >
-          <Typography sx={{ p: 1 }}>
-            Use DeepL Pro Account Cookies (pro-session)/DeepL Api Free Token to translate. This can help you bypass frequency limitations of web api. DeepL Pro Account Cookies is preferred.
-          </Typography>
-        </Popover>
+          <IconButton
+            size="large"
+            onClick={handleRefreshToken}
+          >
+            <RefreshIcon />
+          </IconButton>
+          <IconButton
+            size="large"
+            onMouseEnter={handleHelpPopoverOpen}
+            onMouseLeave={handleHelpPopoverClose}
+          >
+            <HelpIcon />
+          </IconButton>
+        </Stack>
+        <Help helpPopover={helpPopover} handleHelpPopoverClose={handleHelpPopoverClose} />
         {title}
         <DialogContent>
           <List />
         </DialogContent>
         <DialogActions>
-          <Popover
-            anchorOrigin={{
-              vertical: 'top',
-              horizontal: 'center',
-            }}
-            transformOrigin={{
-              vertical: 'bottom',
-              horizontal: 'center',
-            }}
-            open={Boolean(addTokenPopover)}
-            anchorEl={addTokenPopover}
-            onClose={handleAddTokenPopoverClose}
-          >
-            <Stack
-              spacing={2}
-              sx={{
-                minWidth: 500,
-                p: 2
-              }}
-            >
-              <TextField
-                select
-                label="Type"
-                value={addTokenType}
-                onChange={handleSetAddTokenType}
-                helperText="Please select your token type"
-                fullWidth
-              >
-                <MenuItem value='deepl-api-free-token'>
-                  Deepl API Free Token
-                </MenuItem>
-                <MenuItem value='pro-session'>
-                  Deepl Pro Account Session
-                </MenuItem>
-              </TextField>
-              <TextField label="ID" variant="outlined" helperText="This is the name of your token/session" onChange={handleSetAddTokenId} value={addTokenId} />
-              {
-                addTokenType === 'deepl-api-free-token' ?
-                  <TextField label="Token" variant="outlined" helperText="e.g. af10af44-f658-5c9d-f3b0-0c1e0f4b2e6c:fx" onChange={handleSetAddToken} value={addToken} fullWidth /> :
-                  <TextField label="Session" variant="outlined" helperText="e.g. 07958060-0c2a-fab4-5de4-4580c63da0e3" onChange={handleSetAddSession} value={addSession} fullWidth />
-              }
-              <Button variant="contained" onClick={saveToken} disabled={!(addTokenId && ((addTokenType === 'deepl-api-free-token' && addToken) || (addTokenType === 'pro-session' && addSession)))} fullWidth> Save </Button>
-            </Stack>
-          </Popover>
+          <NewTokenModel
+            addTokenPopover={addTokenPopover}
+            handleAddTokenPopoverClose={handleAddTokenPopoverClose}
+            tokenStore={tokenStore}
+          />
+          <Button onClick={handleCopyUUID}>
+            Copy your UUID
+          </Button>
           <Button onClick={handleAddTokenPopoverOpen}>
             Add your own token or session
           </Button>

@@ -9,6 +9,7 @@ import Annoumcement from 'components/annoumcement';
 import Btns from 'components/Btns';
 import GlobalStyle from 'components/GlobalStyle';
 import Token from 'components/token';
+import Sponsor from 'components/Sponsor';
 
 import store from 'store';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -52,19 +53,7 @@ const DarkModeStyle = <GlobalStyles
   }}
 />;
 
-async function getDomModifier() {
-  let domModifier = [];
-  if (Date.now() - store.cacheStore.getPersistCache('lastGetDomModifier') < 10800000) {
-    domModifier = store.configStore.getDomModifier;
-  } else {
-    try {
-      domModifier = await api.getDomModifier();
-      store.cacheStore.setPersistCache('lastGetDomModifier', Date.now());
-    } catch (error) {
-      domModifier = store.configStore.getDomModifier;
-      enqueueSnackbar(`Get dom modifier failed: ${error.message}`, { variant: 'error' })
-    }
-  }
+function handleDomModifier(domModifier) {
   for (const { selector, enabled, type, options } of domModifier ?? []) {
     if (enabled) {
       const handler = {
@@ -90,6 +79,22 @@ async function getDomModifier() {
   }
 }
 
+async function getDomModifier() {
+  let domModifier = [];
+  if (Date.now() - store.cacheStore.getPersistCache('lastGetDomModifier') < 10800000) {
+    domModifier = store.configStore.getDomModifier;
+  } else {
+    try {
+      domModifier = await api.getDomModifier();
+      store.cacheStore.setPersistCache('lastGetDomModifier', Date.now());
+    } catch (error) {
+      domModifier = store.configStore.getDomModifier;
+      enqueueSnackbar(`Get dom modifier failed: ${error.message}`, { variant: 'error' })
+    }
+  }
+  handleDomModifier(domModifier);
+}
+
 async function checkUpdate() {
   if (Date.now() - store.cacheStore.getPersistCache('lastUpdateCheck') < 300000) return;
   try {
@@ -111,7 +116,7 @@ async function loadRemoteScript() {
       const code = await sendMessage({
         method: 'proxyFetch',
         params: {
-          url: `${process.env.NODE_ENV === 'development' ? "http://127.0.0.1:8787" : "https://serverless.blueagle.top"}/static/deepl-crack/remote-script.js`,
+          url: `${process.env.NODE_ENV === 'development' ? "http://127.0.0.1:3001" : "https://serverless.blueagle.top"}/static/deepl-crack/remote-script.js`,
           config: {}
         }
       });
@@ -129,7 +134,7 @@ async function loadRemoteScript() {
 
 function App() {
 
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true' ? true : false);
 
   const configStore = useLocalObservable(() => store.configStore);
   const tokenStore = useLocalObservable(() => store.tokenStore);
@@ -137,7 +142,11 @@ function App() {
   const handleToggleDocumentWindow = useCallback(() => store.windowStore.toggleDocumentWindow(), []);
   const handleToggleAnnouncementWindow = useCallback(() => store.windowStore.toggleAnnouncementWindow(), []);
   const handleToggleTokenWindow = useCallback(() => store.windowStore.toggleTokenWindow(), []);
-  const handleToggleDarkMode = useCallback(() => setDarkMode(!darkMode), [darkMode]);
+  const handleToggleDarkMode = useCallback(() => {
+    const value = !darkMode;
+    setDarkMode(value);
+    localStorage.setItem('darkMode', `${value}`);
+  }, [darkMode]);
   const handleCleanCookies = useCallback(() => {
     try {
       cleanCookies()
@@ -172,7 +181,7 @@ function App() {
 
     return () => {
       getAvailableListener();
-      clearInterval(checkInterval);
+      isHydratedListener();
       document.removeEventListener('visibilitychange', visibleListener);
     }
   }, [])
@@ -199,10 +208,10 @@ function App() {
               show: true
             },
             {
-              label: !!tokenStore.getActiveId ? tokenStore.getActiveId?.type === 'pro-session' ? 'Using Pro Account Session' : 'Using DeepL Api Free Token' : 'Tokens',
+              label: tokenStore.getActiveToken ? tokenStore.getActiveToken?.type === 'pro-session' ? 'Using Pro Account Session' : 'Using DeepL Api Free Token' : 'Tokens',
               icon: <TokenIcon />,
               onClick: handleToggleTokenWindow,
-              bounce: !!tokenStore.getActiveId,
+              bounce: Boolean(tokenStore.getActiveToken),
               show: true
             },
             {
@@ -223,6 +232,7 @@ function App() {
       <Document />
       <Annoumcement />
       <Token />
+      <Sponsor />
     </ThemeProvider>
   )
 }

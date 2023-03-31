@@ -9,6 +9,30 @@ import Paper from '@mui/material/Paper';
 
 const progress = <CircularProgress sx={{ color: 'white', width: '80px!important', height: '80px!important' }} />;
 
+function renderTask({ task, id }) {
+  return (
+    <Paper
+      key={id}
+      sx={{
+        textAlign: 'center',
+        width: 240,
+        boxShadow: 24,
+        padding: '6px 12px',
+        fontSize: 24,
+        fontWeight: 800,
+        background: 'white',
+        color: (theme) => theme.palette.primary.main
+      }}
+    >
+      {task}
+    </Paper>
+  );
+}
+
+function renderLoadingList(loadingList) {
+  return loadingList.map(renderTask);
+}
+
 function Loading() {
 
   const loadingStore = useLocalObservable(() => store.loadingStore);
@@ -32,23 +56,7 @@ function Loading() {
             alignItems="center"
             spacing={2}
           >
-            {loadingStore.loadingList.map(({ task, id }) => (
-              <Paper
-                key={id}
-                sx={{
-                  textAlign: 'center',
-                  width: 240,
-                  boxShadow: 24,
-                  padding: '6px 12px',
-                  fontSize: 24,
-                  fontWeight: 800,
-                  background: 'white',
-                  color: (theme) => theme.palette.primary.main
-                }}
-              >
-                {task}
-              </Paper>
-            ))}
+            {renderLoadingList(loadingStore.loadingList)}
           </Stack>
         </Stack>
       </Backdrop>
@@ -56,4 +64,4 @@ function Loading() {
   )
 }
 
-export default memo(Loading, () => true);
+export default memo(Loading);

@@ -1,7 +1,5 @@
 import { openRules, sendRules } from './rules';
 import store from 'store';
-import { waitForSelector } from 'utils';
-import { enqueueSnackbar } from 'notistack';
 
 const originalXhrOpen = XMLHttpRequest.prototype.open;
 const originalXhrSend = XMLHttpRequest.prototype.send;
@@ -9,63 +7,15 @@ const originalSetAttribute = Element.prototype.setAttribute;
 const originalSubmit = HTMLFormElement.prototype.submit;
 
 function getFileName() {
-  function cleanExtension(fileName) {
-    fileName = fileName.split('.');
-    fileName.pop();
-    return fileName.join('.');
-  }
   const fileNameInput = this.querySelector('input[name="fileName"]');
   if (fileNameInput) {
-    return cleanExtension(fileNameInput.value);
+    return fileNameInput.value.split('.').slice(0, -1).join('.');
   }
   const hijackCacheName = store.cacheStore.getCache('nextDocumentHijackName');
   if (hijackCacheName) {
-    return cleanExtension(hijackCacheName);
+    return hijackCacheName.split('.').slice(0, -1).join('.');
   }
-  return Date()
-}
-
-let maxChars = 1000;
-
-function pasteHandler(e) {
-  if (store.tokenStore.getActiveId?.type === 'deepl-api-free-token') {
-    maxChars = 5000;
-  } else if (store.tokenStore.getActiveId?.type !== 'pro-session') {
-    maxChars = null;
-  }
-  if (!maxChars) {
-    return;
-  }
-  if (store.cacheStore.getCache('longTextTranslation') === 'pending') {
-    e.preventDefault();
-    return;
-  }
-  const text = e.clipboardData.getData('text/plain');
-  if (text.length > maxChars) {
-    e.preventDefault();
-    const loading = store.loadingStore.addLoading('Translating long text');
-    const splitedChunks = [];
-    for (let i = 0; i < text.length; i += maxChars) {
-      splitedChunks.push(text.substr(i, maxChars));
-    }
-    (async () => {
-      try {
-        for (const text of splitedChunks) {
-          store.cacheStore.setCache('longTextTranslation', 'pending');
-          const curserPosition = e.target.selectionStart + text.length;
-          e.target.value = e.target.value.slice(0, e.target.selectionStart) + text + e.target.value.slice(e.target.selectionEnd);
-          e.target.setSelectionRange(curserPosition, curserPosition);
-          e.target.dispatchEvent(new Event('input', { bubbles: true }));
-          await waitTillFinished();
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-      } catch (error) {
-        enqueueSnackbar(error, { variant: 'error' });
-      }
-      store.loadingStore.removeLoading(loading);
-      store.cacheStore.setCache('longTextTranslation', 'none');
-    })();
-  }
+  return Date();
 }
 
 function modifyHandler(rule) {
@@ -78,7 +28,6 @@ function modifyHandler(rule) {
         Object.defineProperty(this, "status", {
           get: () => 200,
         });
-        rule.drop = true;
         break;
       case 'handler':
         Object.defineProperty(this, "responseText", {
@@ -87,9 +36,9 @@ function modifyHandler(rule) {
         Object.defineProperty(this, "status", {
           get: () => 200,
         });
-        rule.drop = true;
         break;
     }
+    rule.drop = true;
   }
   if (rule.onErrorHandler) {
     this.addEventListener('error', rule.onErrorHandler);
@@ -116,6 +65,44 @@ function modifyHandler(rule) {
   }
 }
 
+function changeUrlHandler(rule) {
+  switch (rule.changeUrl.type) {
+    case 'handler':
+      this.url = rule.changeUrl.handler.call(this);
+      break;
+    case 'replace':
+      this.url = this.url.replace(rule.match, rule.changeUrl.replace);
+      break;
+    case 'override':
+      this.url = rule.changeUrl.override;
+      break;
+  }
+}
+
+function changePayloadHandler(rule) {
+  switch (rule.changePayload.type) {
+    case 'replace':
+      this.payload = this.payload.replace(rule.matchPayload, rule.changePayload.replace);
+      break;
+  }
+}
+
+function downloadDocument() {
+  const loading = store.loadingStore.addLoading(`Downloading ${getFileName.call(this)}`);
+  fetch(this.getAttribute('action'), {
+    method: 'POST',
+    body: new FormData(this),
+    credentials: 'include',
+  })
+    .then(response => response.blob())
+    .then(response => {
+      const name = getFileName.call(this);
+      store.documentStore.addDocument(response, name);
+      store.windowStore.toggleDocumentWindow();
+    })
+    .catch(() => originalSubmit.call(this))
+    .finally(() => store.loadingStore.removeLoading(loading))
+}
 
 export function proxy() {
   XMLHttpRequest.prototype.open = async function (method, url, ...rest) {
@@ -126,21 +113,11 @@ export function proxy() {
         if (rule.await) {
           await rule.await.call(this);
         }
-        if (modifyHandler.call(this, rule) === 'abort') {
+        if (modifyHandler.call(this, rule) === 'abort' || this.DONNOTSEND) {
           return
         }
         if (rule.changeUrl) {
-          switch (rule.changeUrl.type) {
-            case 'handler':
-              this.url = rule.changeUrl.handler.call(this);
-              break;
-            case 'replace':
-              this.url = this.url.replace(rule.match, rule.changeUrl.replace);
-              break;
-            case 'override':
-              this.url = rule.changeUrl.override;
-              break;
-          }
+          changeUrlHandler.call(this, rule);
         }
         if (rule.changeMethod) {
           this.method = rule.changeMethod;
@@ -159,15 +136,11 @@ export function proxy() {
           if (rule.await) {
             await rule.await.call(this);
           }
-          if (modifyHandler.call(this, rule) === 'abort') {
+          if (modifyHandler.call(this, rule) === 'abort' || this.DONNOTSEND) {
             return
           }
           if (rule.changePayload) {
-            switch (rule.changePayload.type) {
-              case 'replace':
-                this.payload = this.payload.replace(rule.matchPayload, rule.changePayload.replace);
-                break;
-            }
+            changePayloadHandler.call(this, rule);
           }
         }
       }
@@ -185,52 +158,19 @@ export function proxy() {
     }
     originalSetAttribute.call(this, name, value);
   }
+
   HTMLFormElement.prototype.submit = function () {
-
     if (/documentTranslation/.test(this.getAttribute('action'))) {
-      const loading = store.loadingStore.addLoading(`Downloading ${getFileName.call(this)}`);
-
-      fetch(this.getAttribute('action'), {
-        method: 'POST',
-        body: new FormData(this),
-        credentials: 'include',
-      })
-        .then(response => response.blob())
-        .then(response => {
-          const name = getFileName.call(this);
-          store.documentStore.addDocument(response, name);
-          store.windowStore.toggleDocumentWindow();
-        })
-        .catch(() => originalSubmit.call(this))
-        .finally(() => store.loadingStore.removeLoading(loading))
-
+      downloadDocument.call(this);
     } else {
       originalSubmit.call(this);
     }
   }
-  waitForSelector('.lmt__source_textarea')
-    .then(textarea => textarea.addEventListener('paste', pasteHandler))
 }
+
 export function unproxy() {
   Element.prototype.setAttribute = originalSetAttribute;
   XMLHttpRequest.prototype.open = originalXhrOpen;
   XMLHttpRequest.prototype.send = originalXhrSend;
   HTMLFormElement.prototype.submit = originalSubmit;
-  waitForSelector('.lmt__source_textarea')
-    .then(textarea => textarea.removeEventListener('paste', pasteHandler))
-}
-
-function waitTillFinished() {
-  return new Promise((resolve, reject) => {
-    const interval = setInterval(() => {
-      if (!['none', 'pending'].includes(store.cacheStore.getCache('longTextTranslation'))) {
-        clearInterval(interval);
-        if (store.cacheStore.getCache('longTextTranslation') === 'success') {
-          resolve();
-        } else if (store.cacheStore.getCache('longTextTranslation') === 'failed') {
-          reject();
-        }
-      }
-    }, 10);
-  });
 }

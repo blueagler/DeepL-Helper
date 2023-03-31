@@ -35,6 +35,46 @@ async function getAnnouncement() {
   }
 }
 
+function AnnouncementCard({ announcement }) {
+  return (
+    <Card
+      key={announcement.id}
+      sx={{
+        margin: '0 15px!important',
+      }}
+    >
+      <CardContent>
+        <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
+          {announcement.type ?? 'Announcement'}
+        </Typography>
+        <Typography variant="h5" component="div">
+          {announcement.title ?? 'Title'}
+        </Typography>
+        <Typography sx={{
+          mb: 1.5,
+          whiteSpace: 'pre-wrap'
+        }} color="text.secondary">
+          {announcement.secondary ?? 'Secondary'}
+        </Typography>
+        <Typography variant="body2"
+          sx={{
+            whiteSpace: 'pre-wrap'
+          }}
+        >
+          {announcement.description ?? 'Description'}
+        </Typography>
+      </CardContent>
+      <CardActions>
+        {
+          (announcement.links ?? []).map((link, key) =>
+            <Button size="small" component='a' target='_blank' href={link.href ?? ''} key={link.label ?? key}>{link.label ?? 'Label'}</Button>
+          )
+        }
+      </CardActions>
+    </Card>
+  );
+}
+
 function Announcement() {
 
   const configStore = useLocalObservable(() => store.configStore);
@@ -55,6 +95,7 @@ function Announcement() {
       }
     })
     return () => {
+      isHydratedListener();
       document.removeEventListener('visibilitychange', visibleListener);
     }
   }, [])
@@ -92,41 +133,7 @@ function Announcement() {
         >
           {
             (configStore.getAnnouncements ?? []).map((announcement, key) =>
-              <Card
-                key={announcement.id ?? key}
-                sx={{
-                  margin: '0 15px!important',
-                }}
-              >
-                <CardContent>
-                  <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
-                    {announcement.type ?? 'Announcement'}
-                  </Typography>
-                  <Typography variant="h5" component="div">
-                    {announcement.title ?? 'Title'}
-                  </Typography>
-                  <Typography sx={{
-                    mb: 1.5,
-                    whiteSpace: 'pre-wrap'
-                  }} color="text.secondary">
-                    {announcement.secondary ?? 'Secondary'}
-                  </Typography>
-                  <Typography variant="body2"
-                    sx={{
-                      whiteSpace: 'pre-wrap'
-                    }}
-                  >
-                    {announcement.description ?? 'Description'}
-                  </Typography>
-                </CardContent>
-                <CardActions>
-                  {
-                    (announcement.links ?? []).map((link, key) =>
-                      <Button size="small" component='a' target='_blank' href={link.href ?? ''} key={link.label ?? key}>{link.label ?? 'Label'}</Button>
-                    )
-                  }
-                </CardActions>
-              </Card>
+              <AnnouncementCard key={announcement.id ?? key} announcement={announcement} />
             )
           }
         </Stack>

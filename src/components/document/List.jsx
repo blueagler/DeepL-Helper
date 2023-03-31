@@ -12,12 +12,30 @@ import Delete from '@mui/icons-material/Delete';
 import Download from '@mui/icons-material/Download';
 import prettyBytes from 'pretty-bytes';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
+import { TransitionGroup } from 'react-transition-group';
+import Collapse from '@mui/material/Collapse';
 
 const title = <ListSubheader>Documents</ListSubheader>;
 
 const fileIcon = <ListItemAvatar><Avatar><Task /></Avatar></ListItemAvatar>;
 
+const renderTooltip = (title, onClick, IconComponent) => (
+  <Tooltip title={title}>
+    <IconButton onClick={onClick}>
+      <IconComponent />
+    </IconButton>
+  </Tooltip>
+);
+
 export default memo(function ({ list, handleDeleteDocument, handleDecryptDocument, handleDownloadDocument }) {
+
+  const renderSecondaryAction = (document) => (
+    <>
+      {renderTooltip("Delete", () => handleDeleteDocument(document?.name), Delete)}
+      {renderTooltip("Remove editing restrictions", () => handleDecryptDocument(document), LockOpenIcon)}
+      {renderTooltip(`Size: ${prettyBytes(document?.blob?.size ?? 0)}`, () => handleDownloadDocument(document?.blob, document?.name), Download)}
+    </>
+  );
 
   return (
     <List
@@ -27,38 +45,21 @@ export default memo(function ({ list, handleDeleteDocument, handleDecryptDocumen
       }}
       subheader={title}
     >
-      {
-        (list ?? []).map((document, key) => (
-          <ListItem
-            key={document.name ?? key}
-            secondaryAction={
-              <>
-                <Tooltip title="Delete">
-                  <IconButton onClick={() => handleDeleteDocument(document?.name)}>
-                    <Delete />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Remove editing restrictions">
-                  <IconButton onClick={() => handleDecryptDocument(document)}>
-                    <LockOpenIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title={`Size: ${prettyBytes(document?.blob?.size ?? 0)}`}>
-                  <IconButton onClick={() => handleDownloadDocument(document?.blob, document?.name)}>
-                    <Download />
-                  </IconButton>
-                </Tooltip>
-              </>
-            }
-          >
-            {fileIcon}
-            <ListItemText
-              primary={document?.name ?? 'FileName'}
-              secondary={document?.blob?.type ?? 'FileType'}
-            />
-          </ListItem>
-        ))
-      }
+      <TransitionGroup>
+        {
+          (list ?? []).map((document, key) => (
+            <Collapse key={document.name ?? key}>
+              <ListItem secondaryAction={renderSecondaryAction(document)}>
+                {fileIcon}
+                <ListItemText
+                  primary={document?.name ?? 'FileName'}
+                  secondary={document?.blob?.type ?? 'FileType'}
+                />
+              </ListItem>
+            </Collapse>
+          ))
+        }
+      </TransitionGroup>
     </List>
   )
 }, (prevProps, nextProps) => prevProps.list === nextProps.list);
