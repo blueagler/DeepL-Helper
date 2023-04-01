@@ -15,7 +15,7 @@ https://user-images.githubusercontent.com/61572188/221816073-67c11553-1387-43a1-
 ## Limitations
 > ### DeepL may ban your IP due to high frequency of requests to web api. There are 2 solutions:
 > - Use DeepL Pro Account Cookies/DeepL Api Free Token to translate.
-> - Use a proxy to change IP.
+> - First, Use a proxy to change IP. Then, click clean cookie button.
 > ### File translation quota and maximum upload size of 5 MB are not cracked due to server verification.
 > ### Edge users should disable Advanced Security for deepl.com so that this extension can unlock PDF.
 
