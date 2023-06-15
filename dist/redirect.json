@@ -5,7 +5,7 @@
     "action": {
       "type": "redirect",
       "redirect": {
-        "url": "https://serverless.blueagle.top/deepl-crack/get-client-state"
+        "url": "https://v1-cf-api.blueagle.top/deepl-crack/get-client-state"
       }
     },
     "condition": {

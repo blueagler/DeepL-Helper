@@ -1,11 +1,11 @@
 import JSZip from 'jszip';
-import mupdf from './pdfUnlock';
+import mupdf from './mupdf';
 
-async function parseXMLFromZip(zip, path) {
+export async function parseXMLFromZip(zip, path) {
   return new DOMParser().parseFromString(await zip.file(path).async('string'), 'application/xml');
 }
 
-function saveXMLToZip(zip, path, xml) {
+export function saveXMLToZip(zip, path, xml) {
   return zip.file(path, new XMLSerializer().serializeToString(xml));
 }
 
@@ -78,7 +78,16 @@ const typeHandlers = [
   {
     type: 'application/pdf',
     handler: async function (blob) {
-      return new Blob([await mupdf.unlock(new Uint8Array(await blob.arrayBuffer()))], { type: blob.type });
+      try {
+        const pdf = await mupdf.unlock(new Uint8Array(await blob.arrayBuffer()));
+        return new Blob([pdf], { type: blob.type });
+      } catch (error) {
+        if (/NaN/.test(error.message)) {
+          throw new Error('Decryption module not loaded, please wait a few seconds and try again. Make sure you are connected to the internet. (PRC user may need to use a VPN)');
+        } else {
+          throw error;
+        }
+      }
     }
   }
 ]

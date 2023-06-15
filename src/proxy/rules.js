@@ -1,22 +1,29 @@
-import { enqueueSnackbar } from 'notistack'
-import { cleanCookies } from "utils";
+import { enqueueSnackbar, closeSnackbar } from 'notistack'
 import Button from '@mui/material/Button';
-import { sendMessage } from 'utils'
-import store from 'store';
+import { sendMessage, cleanCookies } from '../utils'
+import store from '../store'
+import api from "../utils/api";
 
 export const openRules = [
   {
     match: /getClientState/,
     response: {
       type: 'override',
-      override: '{"jsonrpc":"2.0","id":0,"result":{"proAvailable":true,"updateNecessary":false,"featureSet":{"translator":{"service":"pro","formality":true},"documentTranslation":{"service":"free","pdf":"noAccountConsent","formality":true},"glossary":{"termbaseService":false,"sharing":false,"uploadAndDownload":false,"maxEntriesPerGlossary":0,"maxGlossaries":0}},"ep":true,"loginState":{"accountId":"0"},"notifications":[]}}'
+      override: '{"result":{"proAvailable":true,"updateNecessary":false,"featureSet":{"subscription":{"inactiveSubscriptionWarning":false,"billing":true,"usage":true,"api":true,"isSubaccount":false,"upgradeOptions":[],"signup":false,"management":true,"managedUpAndDowngrades":false,"checkoutForbiddenReasons":[],"newPaymentSystem":false},"support":{"contactForm":false,"tags":[],"openToAnyLoggedIn":false},"translator":{"service":"pro","maxCharactersPerRequest":null,"formality":true},"documentTranslation":{"service":"free","pdf":"ok","formality":true,"maxQuota":null,"sizeLimits":{"docx":5,"htm":0,"html":0,"pdf":5,"pptx":5,"txt":0,"xlf":0,"xliff":0}},"glossary":{"maxEntriesPerGlossary":0,"maxGlossaries":0,"termbaseService":false,"sharing":false,"uploadAndDownload":false},"speech":{"textToSpeech":"yes","speechRecognition":"yes"},"ocr":{"ocr":"yes"},"savedTranslations":{"enabled":true,"savedTranslationsEntryCount":9007199254740991},"translationHistory":{"historyEntryDurationSec":2592000,"historyEntryDuration":{"seconds":2592000,"nanos":0},"accessRight":"yes"},"quickTranslator":{"maxCharactersPerRequest":null},"virality":{"addFooterToCopiedOrSharedText":true},"api":{"manageKeys":true,"service":"pro","catToolsOnly":false,"serviceCatTools":"pro"}},"ep":null,"loginState":{"accountId":"id","ssoIdentityProviderName":null,"ssoIdentityProviderId":null},"notifications":[]},"id":0,"jsonrpc":"2.0"}'
     }
   },
   {
-    match: /getAccountId/,
+    match: /getCurrentAccount/,
     response: {
       type: 'override',
-      override: '{"jsonrpc":"2.0","result":{"accountId":0},"id":0}'
+      override: '{"result":{"accountId":"id","email":"DeepL Crack / Blueagle ❤️","name":"","locale":{"languageCode":"en","countryCode":"  "},"teamName":"DeepL Cracked"},"id":0,"jsonrpc":"2.0"}'
+    }
+  },
+  {
+    match: /PHP\/backend\/account.php/,
+    response: {
+      type: 'override',
+      override: '{"jsonrpc":"2.0","result":{"messageCount":"0","activation":{"id":"0","apiKey":"0","characterLimit":"9007199254740991","characterCount":"0","endDate":"2099-01-01","startDate":"2000-01-01","subscriptionId":"2984841","type":"REGULAR","has_billing_data":"1","disabledTime":null,"cancelationTime":null,"additionalCharacterCount":"0","additionalPrice":"0.00","periodStartDate":"2000-01-01","periodEndDate":"2099-01-01","isCurrent":"t","allowChangePayment":true,"allowNewSubscription":false,"settlementId":null,"isTrialPeriod":"t","allowReactivateSubscriptionInTrial":true,"allowRescindCancellation":true,"hasDeletedPaymentToken":"0","isBalanced":true,"trialPeriodUntil":"2099-01-01","period":"DeepL Cracked","allowSeeAccount":true,"showReactivationContent":false,"showRescissionContent":true,"allowChangeKey":true,"isActive":true,"status":"activated on June 1, 2023","statusType":"activated","allowChangeData":true,"allowSeeKey":true,"allowSeeBillingData":true,"allowCancel":false},"subscription":{"id":"2984841","contractConfirmationTime":"2000-01-01 10:21:32.345966+00","billing_period_id":"1","activation_key":"0","type":"REGULAR","currency":"USD","characterLimit":"30000000","cancelationTime":null,"productCode":"silver","productId":"3000","productCharacterLimit":"1000000","price":"0.00","apiKey":"0","addressId":null,"costControl":"0","subscriptionKey":null,"activationKey":"0","isConfirmed":"1","accountLimit":9007199254740991,"documentLimit":9007199254740991,"accountDocumentLimit":9007199254740991,"payment_provider":"STRIPE","payment_provider_id":"20","can_charge":"1","is_invoicing":"0","basicPrice":"0","paymentMethod":"mastercard","card_number_suffix":"1234","expirationDate":"01/2099","remainingDays":"509","refreshLink":null,"clientSecret":null,"subsequentProductId":null,"subsequentBillingPeriodId":null,"subsequentAccountLimit":null,"settlementStartDate":"2023-05-31","settlementEndDate":"2099-01-01","payment_incomplete":"0.00","settlementLastDate":"2099-01-01","includedCharacterCount":"0","ssoIdentityProviderId":null,"supportsAPI":false,"supportsWebTranslator":true,"supportsCatTools":true,"allowsCostControl":false,"customerReference":null,"billingEmail":null,"allowUnlimitedUsers":"f","securityRequestMode":"AUTOMATIC","allowInvoicePayment":false,"allowCreditCardPayment":true,"allowDirectDebitPayment":false,"priceScaleId":"4","paymentMethodSuffix":"1234","expirationDateDescription":"01/2099","settlementStartDateRaw":"2000-01-01","settlementEndDateRaw":"2099-01-01","settlementLastDateRaw":"2099-01-01","isTrialPeriod":"t","isPaymentOverdue":false,"oneTimeSettlementOnUpgrade":{"gross":0,"net":0}},"settlements":[],"address":{},"availableCountries":[],"docConsumption":{"currentUserTranslatedDocuments":0,"currentUserDocumentLimit":9007199254740991,"totalDocumentBudget":9007199254740991,"totalTranslatedDocuments":0},"teamMembership":{"isTeamMember":false,"teamSubscriptionId":false,"teamName":"","teamEmail":"","teamIsActive":false,"isActiveMember":false,"statusText":""},"stripePublicKey":"0","products":{},"vatRates":{},"userPaymentAvailability":{"invoice":"ALLOWED","creditCard":"ALLOWED","directDebit":"ALLOWED"},"account":{"id":"0","email":"DeepL Cracked","tokenAndCredential":"0","name":"DeepL Cracked","accountStatus":990,"isAccountEligibleForFreeTrial":false,"timeout":9007199254740991}},"id":0}'
     }
   },
   {
@@ -48,13 +55,20 @@ export const openRules = [
     }
   },
   {
+    match: /getPdfFeatureStatus/,
+    response: {
+      type: 'override',
+      override: '{"result":{"status":"noAccountConsent"},"id":0,"jsonrpc":"2.0"}',
+    }
+  },
+  {
     match: /LMT_handle_jobs/,
     changeUrl: {
       type: 'handler',
       handler() {
-        if (store.tokenStore.getActiveToken?.type === 'deepl-api-free-token') {
+        if (store.tokensAndCredentialsStore.activeTokenOrCredential?.type === 'DeepLApiFreeToken') {
           return 'https://api-free.deepl.com/v2/translate';
-        } else if (store.tokenStore.getActiveToken?.type !== 'pro-session') {
+        } else if (store.tokensAndCredentialsStore.activeTokenOrCredential?.type !== 'ProCredential') {
           return this.url.replace('api.deepl.com', 'www2.deepl.com');
         }
         return this.url
@@ -107,7 +121,7 @@ export const openRules = [
     onLoadHandler() {
       switch (this.status) {
         case 429:
-          enqueueSnackbar('Reached IP frequency limitation of free web api. You can try again later, use a proxy, or use a token/seesion in Token Manager. ', {
+          enqueueSnackbar('Reached IP frequency limitation of free web api. You can try again later, use a proxy, or use a tokenAndCredential/seesion in TokenAndCredential Manager. ', {
             variant: 'error'
           });
           break;
@@ -122,6 +136,7 @@ export const openRules = [
       });
     },
     onLoadHandler() {
+      store.tokensAndCredentialsStore.updateTokenQuota(this.apiToken?.id);
       switch (this.status) {
         case 429:
           enqueueSnackbar('Translation failed due to the IP frequency limitation. Please try again later or use a proxy.', {
@@ -129,12 +144,12 @@ export const openRules = [
           });
           break;
         case 456:
-          enqueueSnackbar('The quota of this DeepL Api Free Token has been used up. Please change your token. ', {
+          enqueueSnackbar('The quota of this DeepL Api Free TokenAndCredential has been used up. Please change your tokenAndCredential. ', {
             variant: 'error'
           });
           break;
         case 403:
-          enqueueSnackbar('This DeepL Api Free Token is invalid. Please change it. ', {
+          enqueueSnackbar('This DeepL Api Free TokenAndCredential is invalid. Please change it. ', {
             variant: 'error'
           });
           break;
@@ -161,24 +176,60 @@ export const openRules = [
   {
     match: /^https:\/\/backend.deepl.com\/documentTranslation\?method=getTranslationStatus/,
     onLoadHandler() {
-      if (this.status == 400 && JSON.parse(this.responseText).error.code == 800) {
-        enqueueSnackbar('Translation was blocked due to the limitation. Do you want to clean identifier cookies and try again? (Page will reload). If it still does not work, you need to use a proxy to change your IP and click Clean Cookie Button again.', {
-          action: () =>
-            <Button
-              onClick={() => {
-                try {
-                  cleanCookies()
-                } catch (error) {
-                  enqueueSnackbar(error.message, { variant: 'error' })
-                }
-              }}
-              sx={{ color: 'white' }}
-            >
-              Yes
-            </Button>,
-          variant: 'warning',
-          persist: true,
-        });
+      if (this.status == 400) {
+        switch (JSON.parse(this.responseText).error.code) {
+          case 800:
+            enqueueSnackbar('Translation was blocked due to the limitation. Do you want to clean identifier cookies and try again? (Page will reload). If it still does not work, you need to use a proxy to change your IP and click Clean Cookie Button again.', {
+              action: () =>
+                <Button
+                  onClick={() => {
+                    (async () => {
+                      try {
+                        await cleanCookies();
+                        location.reload();
+                      } catch (error) {
+                        enqueueSnackbar(error.message, { variant: 'error' })
+                      }
+                    })()
+                  }}
+                  sx={{ color: 'white' }}
+                >
+                  Yes
+                </Button>,
+              variant: 'warning',
+              persist: true,
+            });
+            break;
+          case 1101:
+            enqueueSnackbar('Your file is too large. Please try again with a smaller file. Hint: You can split your file into smaller ones in the File Manager. (DeepL Crack does not crack this feature due to the server verification)', {
+              action: () =>
+                <Button
+                  onClick={() => {
+                    store.windowsStore.toggle('documentsManager')
+                  }}
+                  sx={{ color: 'white' }}
+                >
+                  Yes
+                </Button>,
+              variant: 'warning',
+              persist: true,
+            });
+          case 1103:
+            enqueueSnackbar('Your document contains too many characters. Hint: You can split your file into smaller ones in the File Manager or use text translation. (DeepL Crack does not crack this feature due to the server verification)', {
+              action: () =>
+                <Button
+                  onClick={() => {
+                    store.windowsStore.toggle('documentsManager')
+                  }}
+                  sx={{ color: 'white' }}
+                >
+                  Yes
+                </Button>,
+              variant: 'warning',
+              persist: true,
+            });
+        }
+
       }
     }
   }
@@ -201,138 +252,160 @@ export const sendRules = [
         const textLength = parsedPayload.params.jobs.map(job => job.sentences[0].text).join('').length;
         return { parsedPayload, textLength };
       }
-
-      function splitJobs(jobs) {
-        let batches = [];
-        for (const job of jobs) {
-          if (batches.length === 0) {
-            batches.push([job]);
+      const { parsedPayload, textLength } = parseAndCheckPayload(this.payload);
+      if (textLength > maxTextLength) {
+        function getRandomNumber() {
+          const rand = Math.floor(Math.random() * 99999) + 100000;
+          return rand * 1000;
+        }
+        function getTimeStamp(translate_text) {
+          let iCount = translate_text.split('i').length - 1;
+          const ts = Date.now();
+          if (iCount !== 0) {
+            iCount = iCount + 1;
+            return ts - (ts % iCount) + iCount;
           } else {
-            const lastBatch = batches[batches.length - 1];
-            const lastBatchTextLength = lastBatch.map(job => job.sentences[0].text).join('').length;
-            if (lastBatchTextLength + job.sentences[0].text.length >= maxTextLength) {
-              batches.push([job]);
+            return ts;
+          }
+        }
+        function formatBody(payload, id, job) {
+          let r = JSON.stringify({
+            ...payload,
+            id,
+            params: {
+              ...payload.params,
+              jobs: job,
+              timestamp: getTimeStamp(job.map(job => job.sentences[0].text).join(''))
+            },
+          });
+          if ((id + 5) % 29 === 0 || (id + 3) % 13 === 0) {
+            r = r.replace('"method":"', '"method" : "');
+          } else {
+            r = r.replace('"method":"', '"method": "');
+          }
+          return r;
+        }
+        async function fetchTranslation(url, body, controller) {
+          await sendMessage({
+            method: 'setHeader',
+            params: {
+              regexFilter: "^https://www2\\.deepl\\.com/jsonrpc",
+              id: 1
+            }
+          });
+          try {
+            const r = await fetch(url, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body,
+              signal: controller.signal
+            });
+            switch (r.status) {
+              case 200:
+                return await r.json();;
+              case 429:
+                throw new Error('Reached IP frequency limitation of free web api.');
+              default:
+                throw new Error('Unknown error.');
+            }
+          } catch (error) {
+            throw new Error(error);
+          }
+        }
+        function mergeResults(results) {
+          let mergedResult = null;
+          for (const result of results) {
+            if (mergedResult === null) {
+              mergedResult = result;
             } else {
-              lastBatch.push(job);
+              mergedResult.result.translations = [
+                ...mergedResult.result.translations,
+                ...result.result.translations
+              ]
             }
           }
+          return mergedResult;
         }
-        return batches;
-      }
-
-      function getRandomNumber() {
-        const rand = Math.floor(Math.random() * 99999) + 100000;
-        return rand * 1000;
-      }
-
-      function getTimeStamp(translate_text) {
-        let iCount = translate_text.split('i').length - 1;
-        const ts = Date.now();
-        if (iCount !== 0) {
-          iCount = iCount + 1;
-          return ts - (ts % iCount) + iCount;
-        } else {
-          return ts;
-        }
-      }
-
-      function formatBody(payload, id, job) {
-        let r = JSON.stringify({
-          ...payload,
-          id,
-          params: {
-            ...payload.params,
-            jobs: job,
-            timestamp: getTimeStamp(job.map(job => job.sentences[0].text).join(''))
-          },
-        });
-        if ((id + 5) % 29 === 0 || (id + 3) % 13 === 0) {
-          r = r.replace('"method":"', '"method" : "');
-        } else {
-          r = r.replace('"method":"', '"method": "');
-        }
-        return r;
-      }
-
-      async function fetchTranslation(url, body) {
-        await sendMessage({
-          method: 'setHeader',
-          params: {
-            regexFilter: "^https://www2\\.deepl\\.com/jsonrpc",
-            id: 1
+        function splitJobs(jobs) {
+          let batches = [];
+          for (const job of jobs) {
+            if (batches.length === 0) {
+              batches.push([job]);
+            } else {
+              const lastBatch = batches[batches.length - 1];
+              const lastBatchTextLength = lastBatch.map(job => job.sentences[0].text).join('').length;
+              if (lastBatchTextLength + job.sentences[0].text.length >= maxTextLength) {
+                batches.push([job]);
+              } else {
+                lastBatch.push(job);
+              }
+            }
           }
-        });
-        try {
-          const r = await fetch(url, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body,
+          return batches;
+        }
+        function overrideProperties(result) {
+          this.DONNOTSEND = true;
+          Object.defineProperty(this, "responseText", {
+            get: function () {
+              return JSON.stringify(result);
+            }.bind(this),
+          })
+          Object.defineProperty(this, "readyState", {
+            get: () => this.DONE,
           });
-          switch (r.status) {
-            case 200:
-              return await r.json();;
-            case 429:
-              throw new Error('Reached IP frequency limitation of free web api. You can try again later, use a proxy, or use a token/seesion in Token Manager. ');
-            default:
-              throw new Error('Unknown error.');
-          }
-        } catch (error) {
-          throw new Error(error);
+          Object.defineProperty(this, "status", {
+            get: () => 200,
+          });
+          this.dispatchEvent(new Event('readystatechange'));
         }
-      }
-
-      function mergeResults(results) {
-        let mergedResult = null;
-        for (const result of results) {
-          if (mergedResult === null) {
-            mergedResult = result;
-          } else {
-            mergedResult.result.translations = [
-              ...mergedResult.result.translations,
-              ...result.result.translations
-            ]
-          }
+        const controller = new AbortController();
+        let aborted = false;
+        function stop() {
+          aborted = true;
+          controller.abort();
+          closeSnackbar();
+          enqueueSnackbar('Translation was stopped because of the timeout, you can try again with a shorter text.', { variant: 'error', persist: true, anchorOrigin: { horizontal: 'right', vertical: 'top' } });
         }
-        return mergedResult;
-      }
-
-      function overrideProperties(result) {
-        this.DONNOTSEND = true;
-        Object.defineProperty(this, "responseText", {
-          get: function () {
-            return JSON.stringify(result);
-          }.bind(this),
-        })
-        Object.defineProperty(this, "readyState", {
-          get: () => this.DONE,
+        Object.defineProperty(this, "abort", {
+          get: () => stop,
         });
-        Object.defineProperty(this, "status", {
-          get: () => 200,
-        });
-        this.dispatchEvent(new Event('readystatechange'));
-      }
-
-      const { parsedPayload, textLength } = parseAndCheckPayload(this.payload);
-
-      if (textLength > maxTextLength) {
+        this.addEventListener('abort', stop);
+        this.addEventListener('timeout', stop);
         const batches = splitJobs(parsedPayload.params.jobs);
         let results = [];
+        let batchCount = 0;
         for (const batch of batches) {
+          if (aborted) {
+            break;
+          }
           const id = getRandomNumber();
           const body = formatBody(parsedPayload, id, batch);
           try {
-            const json = await fetchTranslation(this.url, body);
+            closeSnackbar();
+            await new Promise(resolve => setTimeout(resolve, batchCount >= 5 ? 5500 : 100));
+            if (batchCount >= 5) {
+              enqueueSnackbar('Wait for 5 seconds before sending next batch.', { variant: 'info', persist: true, anchorOrigin: { horizontal: 'right', vertical: 'top' } });
+              batchCount = 0;
+            }
+            const json = await fetchTranslation(this.url, body, controller);
             results.push(json);
-            enqueueSnackbar(`Batch ${batches.indexOf(batch) + 1} of ${batches.length} successfully translated.`, { variant: 'success' });
+            closeSnackbar();
+            enqueueSnackbar(`Batch ${batches.indexOf(batch) + 1} of ${batches.length} successfully translated.`, { variant: 'success', persist: true, anchorOrigin: { horizontal: 'right', vertical: 'top' } });
+            batchCount++;
           } catch (error) {
-            enqueueSnackbar(`Batch ${batches.indexOf(batch) + 1} of ${batches.length} failed to translate. Reason: ${error.message}`, { variant: 'error' });
+            closeSnackbar();
+            enqueueSnackbar(`Batch ${batches.indexOf(batch) + 1} of ${batches.length} failed to translate. Reason: ${error.message}`, { variant: 'error', persist: true });
+            enqueueSnackbar('You can try again later, use a proxy, or active/deactive a tokenAndCredential/seesion in TokenAndCredential Manager.', { variant: 'info', persist: true });
+            enqueueSnackbar('Hint: If you want to request the rest of the translation, you can enter any character in the text box and then delete it.', { variant: 'info', persist: true });
             break;
           }
         }
-        const mergedResult = mergeResults(results);
-        overrideProperties.call(this, mergedResult);
+        if (!aborted) {
+          const mergedResult = mergeResults(results);
+          overrideProperties.call(this, mergedResult);
+        }
       }
     }
   },
@@ -409,16 +482,17 @@ export const sendRules = [
         return JSON.stringify(response)
       }
       this.payload = rewritePayload(this.payload);
+      this.apiToken = store.tokensAndCredentialsStore.activeTokenOrCredential;
       await sendMessage({
         method: 'setApiToken',
         params: {
-          token: store.tokenStore.getActiveToken?.token,
+          token: this.apiToken?.data.token,
         }
       });
       Object.defineProperty(this, "responseText", {
         get: function () {
           if (this.status !== 200) {
-            return `{"jsonrpc":"2.0","error":{"code":0,"message":"Check Your Token"}}`
+            return `{"jsonrpc":"2.0","error":{"code":0,"message":"Check Your TokenAndCredential"}}`
           }
           const result = JSON.parse(this.response);
           return createResponse(result, this.payload)
@@ -454,20 +528,62 @@ export const sendRules = [
   {
     matchUrl: /api\.deepl\.com\/jsonrpc/,
     async await() {
-      await sendMessage({
-        method: 'setHeader',
-        params: {
-          regexFilter: "^https://api\\.deepl\\.com/jsonrpc",
-          cookie: `dl_session=${store.tokenStore.getActiveToken?.session};`,
-          id: 1
+      if (store.tokensAndCredentialsStore.activeTokenOrCredential?.data.useProxy) {
+        try {
+          const response = await api.fetchTranslation(store.tokensAndCredentialsStore.activeTokenOrCredential.id, this.payload);
+          if (/^{"jsonrpc":"2\.0","error":{"code":/.test(response)) {
+            throw new Error('INVALID_TOKEN');
+          }
+          Object.defineProperty(this, "responseText", {
+            get: function () {
+              return response;
+            }.bind(this),
+          })
+          Object.defineProperty(this, "status", {
+            get: () => 200,
+          });
+        } catch (error) {
+          switch (error.message) {
+            case 'INVALID_TOKEN':
+              enqueueSnackbar('Your credential is invalid', { variant: 'error' });
+              break;
+            case 'TRANSLATION_FAILED':
+              enqueueSnackbar('Translation failed', { variant: 'error' });
+              break;
+          }
+          Object.defineProperty(this, "status", {
+            get: () => 400,
+          });
         }
-      });
+        this.DONNOTSEND = true;
+        Object.defineProperty(this, "readyState", {
+          get: () => this.DONE,
+        });
+        this.dispatchEvent(new Event('readystatechange'));
+      } else {
+        await sendMessage({
+          method: 'setHeader',
+          params: {
+            regexFilter: "^https://api\\.deepl\\.com/jsonrpc",
+            cookie: store.tokensAndCredentialsStore.activeTokenOrCredential?.data.cookie ?? "",
+            ip: store.tokensAndCredentialsStore.activeTokenOrCredential?.data.ip ?? "1.0.0.1",
+            userAgent: store.tokensAndCredentialsStore.activeTokenOrCredential?.data.userAgent ?? "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) DeepL/1.15.0 Chrome/91.0.4472.77 Electron/13.1.2 Safari/537.36",
+            id: 1
+          }
+        });
+      }
     }
   },
   {
     matchUrl: /backend\.deepl\.com\/documentTranslation\/upload/,
     async await() {
-      const loading = store.loadingStore.addLoading('Sending clearance request');
+      try {
+        await cleanCookies();
+        enqueueSnackbar('Cleared cookies', { variant: 'success' });
+      } catch (_) {
+        enqueueSnackbar('Failed to clear cookies', { variant: 'error' });
+      }
+      const loading = store.loadingStore.add('Sending clearance request');
       try {
         await fetch("https://clearance.deepl.com/token", {
           "mode": "cors",
@@ -477,7 +593,7 @@ export const sendRules = [
       } catch (_) {
         enqueueSnackbar('Clerance request failed', { variant: 'error' });
       }
-      store.loadingStore.removeLoading(loading)
+      store.loadingStore.remove(loading)
     }
   }
 ]

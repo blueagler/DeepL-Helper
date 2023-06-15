@@ -1,84 +1,63 @@
 import { makeAutoObservable } from 'mobx'
-import { makePersistable, isHydrated } from 'mobx-persist-store'
-import forage from 'utils/forage'
-import { uuid } from 'utils'
+import { makePersistable } from 'mobx-persist-store'
+import forage from './utils/forage'
+import { uuid, sendMessage } from './utils'
+import api from "./utils/api";
+import autoSync from './utils/autoSync';
 
+
+let persistedCount = 0;
+function storePersisted() {
+  persistedCount++;
+  if (persistedCount >= 4) {
+    autoSync();
+  }
+}
 class LoadingStore {
-
   constructor() {
     makeAutoObservable(this)
   };
-
   list = [];
-
-  get isLoading() {
+  get loading() {
     return this.list.length > 0;
   }
-
-  get loadingList() {
+  get getList() {
     return this.list;
   }
-
-  addLoading(task) {
+  add(task) {
     const id = Math.random().toString(16).slice(2);
     this.list.push({ task, id });
     return id;
   }
-
-  removeLoading(id) {
+  remove(id) {
     this.list = this.list.filter((item) => item.id !== id);
   }
 }
-
 class CacheStore {
-
   constructor() {
     makeAutoObservable(this)
     makePersistable(this, {
-      name: 'DeepL-Crack-Cache',
+      name: 'DeepL-Crack-PersistCache',
       properties: ['persistCache'],
       storage: forage,
       stringify: false
     })
-
+      .finally(() => storePersisted('PersistCache'))
   };
-
   cache = new Map();
-
-  getCache(key) {
-    return this.cache.get(key);
-  }
-
-  setCache(key, value) {
-    this.cache.set(key, value);
-  }
-
   persistCache = new Map();
-
-  getPersistCache(key) {
-    return this.persistCache.get(key);
+  get(key, persist = false) {
+    return persist ? this.persistCache.get(key) : this.cache.get(key);
   }
-
-  setPersistCache(key, value) {
-    this.persistCache.set(key, value);
-  }
-
-}
-
-
-class RootStore {
-  constructor() {
-    this.cacheStore = new CacheStore(this);
-    this.windowStore = new WindowStore(this);
-    this.loadingStore = new LoadingStore(this);
-    this.configStore = new ConfigStore(this);
-    this.documentStore = new DocumentStore(this);
-    this.tokenStore = new TokenStore(this);
+  set(key, value, persist = false) {
+    if (persist) {
+      this.persistCache.set(key, value);
+    } else {
+      this.cache.set(key, value);
+    }
   }
 }
-
 class ConfigStore {
-
   constructor(rootStore) {
     this.rootStore = rootStore;
     makeAutoObservable(this)
@@ -88,122 +67,70 @@ class ConfigStore {
       storage: forage,
       stringify: false
     })
+      .finally(() => storePersisted('Config'))
   };
-
-  get isHydrated() {
-    return isHydrated(this);
-  }
-
   config = {
-    available: true,
-    domModifier: [],
     announcements: []
   };
-
   get getAnnouncements() {
     return this.config.announcements
   }
-
-  get getDomModifier() {
-    return this.config.domModifier
-  }
-
-  get getAvailable() {
-    return this.config.available
-  }
-
-  setAvailable(available) {
-    this.config.available = available;
-  }
-
-  setDomModifier(domModifier) {
-    this.config.domModifier = domModifier;
-  }
-
   setAnnouncements(announcements) {
     this.config.announcements = announcements;
   }
-
 }
-
-class WindowStore {
-
+class WindowsStore {
   constructor(rootStore) {
     this.rootStore = rootStore;
     makeAutoObservable(this)
   };
-
-  announcementWindowOpen = false;
-  documentWindowOpen = false;
-  tokenWindowOpen = false;
-
-  get isAnnouncementWindowOpen() {
-    return this.announcementWindowOpen;
+  announcements = false
+  documentsManager = false
+  tokensAndCredentialsManager = false
+  get getAnnouncements() {
+    return this.announcements
   }
-
-  get isDocumentWindowOpen() {
-    return this.documentWindowOpen;
+  get getDocumentsManager() {
+    return this.documentsManager
   }
-
-  get isTokenWindowOpen() {
-    return this.tokenWindowOpen;
+  get getTokensAndCredentialsManager() {
+    return this.tokensAndCredentialsManager
   }
-
-  toggleAnnouncementWindow() {
-    this.announcementWindowOpen = !this.announcementWindowOpen;
+  toggle(name) {
+    this[name] = !this[name];
   }
-
-  toggleDocumentWindow() {
-    this.documentWindowOpen = !this.documentWindowOpen;
-  }
-
-  toggleTokenWindow() {
-    this.tokenWindowOpen = !this.tokenWindowOpen;
-  }
-
 }
-
-class DocumentStore {
-
+class DocumentsStore {
   constructor(rootStore) {
     this.rootStore = rootStore;
     makeAutoObservable(this);
     makePersistable(this, {
-      name: 'DeepL-Crack-Document',
+      name: 'DeepL-Crack-Documents',
       properties: ['documents'],
       storage: forage,
       stringify: false,
     })
+      .finally(() => storePersisted('Documents'))
   };
-
-  get isHydrated() {
-    return isHydrated(this);
-  }
-
   documents = [];
-
-  deleteDocument(name) {
+  delete(name) {
     this.documents = this.documents.filter(doc => doc.name !== name);
   }
-
-  cleanDocument() {
+  clean() {
     this.documents = [];
   }
-
-  get getDocumentList() {
+  get list() {
     return this.documents
   }
-
-  addDocument(document, specifiedName) {
-    this.deleteDocument(document.name || specifiedName);
+  add(document, specifiedName) {
+    this.delete(document.name || specifiedName);
     const blob = new Blob([document], { type: document.type });
     this.documents.push({
       name: specifiedName || document.name,
       blob
     });
   }
-
-  modifyDocument(name, blob) {
+  modify(name, blob) {
     this.documents = this.documents.map(doc => {
       if (doc.name === name) {
         return {
@@ -214,97 +141,102 @@ class DocumentStore {
       return doc;
     })
   }
-
 }
 
-class TokenStore {
-
+class TokensAndCredentialsStore {
   constructor(rootStore) {
     this.rootStore = rootStore;
     makeAutoObservable(this);
     makePersistable(this, {
-      name: 'DeepL-Crack-Token',
-      properties: ['tokens', 'activeId', 'uuid'],
+      name: 'DeepL-Crack-TokensAndCredentials',
+      properties: ['tokensAndCredentials', 'activeId', 'UUID'],
       storage: forage,
       stringify: false,
     })
+      .finally(() => storePersisted('TokensAndCredentials'))
   };
-
-  get isHydrated() {
-    return isHydrated(this);
-  }
-
-  tokens = [];
-
+  tokensAndCredentials = [];
   activeId = null;
-
-  uuid = null;
-
+  UUID = null;
   get getUUID() {
-    if (!this.uuid) {
-      this.uuid = uuid();
+    if (!this.UUID) {
+      this.UUID = uuid();
     }
-    return this.uuid;
+    return this.UUID;
   }
-
   setUUID(uuid) {
-    this.uuid = uuid;
+    this.UUID = uuid;
   }
-
   setActiveId(id) {
     this.activeId = id;
   }
-
-  get getActiveToken() {
-    return this.tokens.find(t => t.id === this.activeId && t.status === 'valid') || null;
+  get activeTokenOrCredential() {
+    return this.tokensAndCredentials.find(t => t.id === this.activeId) || null;
   }
-
-  deleteId(id) {
-    this.tokens = this.tokens.filter(t => t.id !== id);
+  delete(id) {
+    this.tokensAndCredentials = this.tokensAndCredentials.filter(t => t.id !== id);
   }
-
-  get getTokenList() {
-    return this.tokens.sort((a, b) => {
-      if (a.property === 'private' && b.property === 'public') {
-        return -1;
-      }
-      if (a.property === 'public' && b.property === 'private') {
-        return 1;
-      }
-      if (a.type === 'pro-session' && b.type === 'deepl-api-free-token') {
-        return -1;
-      }
-      if (a.type === 'deepl-api-free-token' && b.type === 'pro-session') {
-        return 1;
-      }
-      if (a.validCharacter > b.validCharacter) {
-        return -1;
-      }
-      if (a.validCharacter < b.validCharacter) {
-        return 1;
-      }
-      return 0;
-    })
+  get list() {
+    return this.tokensAndCredentials
   }
-
-  removeAllRemoteTokens() {
-    this.tokens = this.tokens.filter(t => t.property === 'local');
+  clean() {
+    this.tokensAndCredentials = this.tokensAndCredentials.filter(t => t.licensing === 'LOCAL');
   }
-
-  addToken(token) {
-    if (this.tokens.find(t => t.id === token.id)) {
-      this.tokens = this.tokens.map(t => {
+  add(token) {
+    if (this.tokensAndCredentials.find(t => t.id === token.id)) {
+      this.tokensAndCredentials = this.tokensAndCredentials.map(t => {
         if (t.id === token.id) {
           return token;
         }
         return t;
       })
     } else {
-      this.tokens.push(token);
+      this.tokensAndCredentials.push(token);
     }
   }
-
+  async updateTokenQuota(id) {
+    const token = this.tokensAndCredentials.find(t => t.id === id);
+    if (!token) {
+      return;
+    }
+    await sendMessage({
+      method: 'setApiToken',
+      params: {
+        token: token.data.token,
+      }
+    });
+    const response = await fetch('https://api-free.deepl.com/v2/usage');
+    let { character_count = 0, character_limit = 0 } = await response.json();
+    switch (response.status) {
+      case 456:
+        break;
+      case 200:
+        break;
+      default:
+        return;
+    }
+    await api.updateTokenQuota(id, character_count, character_limit);
+    const updatedToken = {
+      ...token,
+      data: {
+        ...token.data,
+        character_count,
+        character_limit
+      }
+    };
+    add(updatedToken);
+  }
 }
+class RootStore {
+  constructor() {
+    this.cacheStore = new CacheStore(this);
+    this.windowsStore = new WindowsStore(this);
+    this.loadingStore = new LoadingStore(this);
+    this.configStore = new ConfigStore(this);
+    this.documentsStore = new DocumentsStore(this);
+    this.tokensAndCredentialsStore = new TokensAndCredentialsStore(this);
+  }
+}
+const store = new RootStore();
 
-
-export default new RootStore();
+export default store;

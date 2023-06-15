@@ -63,43 +63,41 @@ async function setHeader() {
   if (!id || (!regexFilter && !urlFilter)) {
     throw new Error('Missing required parameters');
   }
+  const [IP, UA, COOKIE] = [
+    ip || randomIp(),
+    userAgent || randomUserAgent((ua) => {
+      return /(Windows|Macintosh|Linux|Android|iPhone|iPad)/.test(ua.osName) && !/Legacy/.test(ua.folder);
+    }),
+    cookie || await generateCookie()
+  ];
   const action = {
     type: "modifyHeaders",
     requestHeaders: [
       {
         "header": "User-Agent",
         "operation": "set",
-        "value": userAgent || randomUserAgent()
+        "value": UA
       },
       {
         "header": "Cookie",
         "operation": "set",
-        "value": cookie || await generateCookie()
-      },
-      {
-        "header": "Sec-CH-UA",
-        "operation": "remove"
-      },
-      {
-        "header": "Sec-CH-UA-Mobile",
-        "operation": "remove"
-      },
-      {
-        "header": "Sec-CH-UA-Platform",
-        "operation": "remove"
-      },
-      {
-        "header": "X-Forwarded-For",
-        "operation": "set",
-        "value": ip || randomIp()
-      },
-      {
-        "header": "CF-Connecting-IP",
-        "operation": "set",
-        "value": ip || randomIp()
+        "value": COOKIE
       }
     ]
   };
+  ["Sec-CH-UA", "Sec-CH-UA-Mobile", "Sec-CH-UA-Platform"].forEach((header) => {
+    action.requestHeaders.push({
+      "header": header,
+      "operation": "remove"
+    });
+  });
+  ["X-Forwarded-For", "CF-Connecting-IP", "X-Originating-IP", "X-Remote-IP", "X-Client-IP", "X-Real-IP", "True-Client-IP"].forEach((header) => {
+    action.requestHeaders.push({
+      "header": header,
+      "operation": "set",
+      "value": IP
+    });
+  });
   const condition = { resourceTypes };
   const rule = createRule(action, condition, id);
   addFilters(rule, regexFilter, urlFilter);
@@ -198,12 +196,4 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     success: false,
     error: 'Unknown method'
   })
-});
-
-chrome.webNavigation.onBeforeNavigate.addListener(() => {
-  console.info("wake up");
-});
-
-chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
-  console.info("wake up");
 });

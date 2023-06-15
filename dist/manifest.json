@@ -1,9 +1,11 @@
 {
   "name": "DeepL Crack",
-  "version": "1.1.8",
+  "version": "1.2.3",
   "description": "Unlock DeepL Pro features: character limit, document editing",
   "manifest_version": 3,
-  "action": {},
+  "action": {
+    "default_popup": "popup.html"
+  },
   "declarative_net_request": {
     "rule_resources": [
       {
@@ -38,8 +40,7 @@
   ],
   "permissions": [
     "declarativeNetRequest",
-    "cookies",
-    "webNavigation"
+    "cookies"
   ],
   "host_permissions": [
     "*://*.deepl.com/*"

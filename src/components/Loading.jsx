@@ -1,12 +1,10 @@
 import { memo } from 'react'
 import { useLocalObservable, Observer } from 'mobx-react';
-import store from 'store';
-
+import store from '../store';
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 import Stack from '@mui/material/Stack';
 import Paper from '@mui/material/Paper';
-
 const progress = <CircularProgress sx={{ color: 'white', width: '80px!important', height: '80px!important' }} />;
 
 function renderTask({ task, id }) {
@@ -41,7 +39,7 @@ function Loading() {
     <Observer>{() =>
       <Backdrop
         sx={{ zIndex: 1301 }}
-        open={loadingStore.isLoading ?? false}
+        open={loadingStore.loading ?? false}
       >
         <Stack
           direction="row"
@@ -56,7 +54,7 @@ function Loading() {
             alignItems="center"
             spacing={2}
           >
-            {renderLoadingList(loadingStore.loadingList)}
+            {renderLoadingList(loadingStore.getList)}
           </Stack>
         </Stack>
       </Backdrop>

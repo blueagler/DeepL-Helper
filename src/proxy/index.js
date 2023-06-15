@@ -1,5 +1,6 @@
 import { openRules, sendRules } from './rules';
-import store from 'store';
+import store from '../store';
+import { enqueueSnackbar } from 'notistack';
 
 const originalXhrOpen = XMLHttpRequest.prototype.open;
 const originalXhrSend = XMLHttpRequest.prototype.send;
@@ -11,100 +12,116 @@ function getFileName() {
   if (fileNameInput) {
     return fileNameInput.value.split('.').slice(0, -1).join('.');
   }
-  const hijackCacheName = store.cacheStore.getCache('nextDocumentHijackName');
+  const hijackCacheName = store.cacheStore.get('nextDocumentHijackName');
   if (hijackCacheName) {
     return hijackCacheName.split('.').slice(0, -1).join('.');
   }
-  return Date();
+  return String(Date.now());
 }
 
-function modifyHandler(rule) {
+function overrideResponse(xhr, response) {
+  Object.defineProperty(xhr, 'responseText', {
+    get() {
+      return response.override;
+    },
+  });
+  Object.defineProperty(xhr, 'status', {
+    get() {
+      return 200;
+    },
+  });
+}
+
+function handleResponse(xhr, response) {
+  Object.defineProperty(xhr, 'responseText', {
+    get() {
+      return response.handler.call(xhr);
+    },
+  });
+  Object.defineProperty(xhr, 'status', {
+    get() {
+      return 200;
+    },
+  });
+}
+
+function modifyHandler(xhr, rule) {
   if (rule.response) {
-    switch (rule.response.type) {
-      case 'override':
-        Object.defineProperty(this, "responseText", {
-          get: () => rule.response.override,
-        });
-        Object.defineProperty(this, "status", {
-          get: () => 200,
-        });
-        break;
-      case 'handler':
-        Object.defineProperty(this, "responseText", {
-          get: () => rule.response.handler.call(this),
-        });
-        Object.defineProperty(this, "status", {
-          get: () => 200,
-        });
-        break;
+    if (rule.response.type === 'override') {
+      overrideResponse(xhr, rule.response);
+    } else if (rule.response.type === 'handler') {
+      handleResponse(xhr, rule.response);
     }
     rule.drop = true;
   }
   if (rule.onErrorHandler) {
-    this.addEventListener('error', rule.onErrorHandler);
+    xhr.addEventListener('error', rule.onErrorHandler);
   }
   if (rule.onLoadHandler) {
-    this.addEventListener('readystatechange', () => {
-      if (this.readyState === this.DONE) {
-        rule.onLoadHandler.call(this);
+    xhr.addEventListener('readystatechange', () => {
+      if (xhr.readyState === xhr.DONE) {
+        rule.onLoadHandler.call(xhr);
       }
     });
   }
   if (rule.drop) {
-    Object.defineProperty(this, "send", {
-      get: () => () => { },
+    Object.defineProperty(xhr, 'send', {
+      get() {
+        return () => { };
+      },
     });
-    Object.defineProperty(this, "setRequestHeader", {
-      get: () => () => { },
+    Object.defineProperty(xhr, 'setRequestHeader', {
+      get() {
+        return () => { };
+      },
     });
-    Object.defineProperty(this, "readyState", {
-      get: () => this.DONE,
+    Object.defineProperty(xhr, 'readyState', {
+      get() {
+        return xhr.DONE;
+      },
     });
-    this.dispatchEvent(new Event('readystatechange'));
-    return 'abort'
+    xhr.dispatchEvent(new Event('readystatechange'));
+    return 'abort';
   }
 }
 
-function changeUrlHandler(rule) {
-  switch (rule.changeUrl.type) {
-    case 'handler':
-      this.url = rule.changeUrl.handler.call(this);
-      break;
-    case 'replace':
-      this.url = this.url.replace(rule.match, rule.changeUrl.replace);
-      break;
-    case 'override':
-      this.url = rule.changeUrl.override;
-      break;
+function changeUrl(xhr, rule) {
+  if (rule.changeUrl.type === 'handler') {
+    xhr.url = rule.changeUrl.handler.call(xhr);
+  } else if (rule.changeUrl.type === 'replace') {
+    xhr.url = xhr.url.replace(rule.match, rule.changeUrl.replace);
+  } else if (rule.changeUrl.type === 'override') {
+    xhr.url = rule.changeUrl.override;
   }
 }
 
-function changePayloadHandler(rule) {
-  switch (rule.changePayload.type) {
-    case 'replace':
-      this.payload = this.payload.replace(rule.matchPayload, rule.changePayload.replace);
-      break;
+function changePayload(xhr, rule) {
+  if (rule.changePayload.type === 'replace') {
+    xhr.payload = xhr.payload.replace(rule.matchPayload, rule.changePayload.replace);
   }
 }
 
-function downloadDocument() {
-  const loading = store.loadingStore.addLoading(`Downloading ${getFileName.call(this)}`);
-  fetch(this.getAttribute('action'), {
+function downloadDocument(form) {
+  const loading = store.loadingStore.add(`Downloading ${getFileName.call(form)}`);
+  fetch(form.getAttribute('action'), {
     method: 'POST',
-    body: new FormData(this),
+    body: new FormData(form),
     credentials: 'include',
   })
     .then(response => response.blob())
-    .then(response => {
-      const name = getFileName.call(this);
-      store.documentStore.addDocument(response, name);
-      store.windowStore.toggleDocumentWindow();
+    .then(blob => {
+      const name = getFileName.call(form);
+      store.documentsStore.add(blob, name);
+      store.windowsStore.toggle('documentsManager');
+      enqueueSnackbar(`Your document ${name} has been downloaded to Documents Manager, if you want to remove editing protection, please click the unlock button.`, {
+        variant: 'info',
+      });
     })
-    .catch(() => originalSubmit.call(this))
-    .finally(() => store.loadingStore.removeLoading(loading))
+    .catch(() => originalSubmit.call(form))
+    .finally(() => store.loadingStore.remove(loading));
 }
 
-export function proxy() {
+function overrideXhrOpen() {
   XMLHttpRequest.prototype.open = async function (method, url, ...rest) {
     this.method = method;
     this.url = url;
@@ -113,21 +130,22 @@ export function proxy() {
         if (rule.await) {
           await rule.await.call(this);
         }
-        if (modifyHandler.call(this, rule) === 'abort' || this.DONNOTSEND) {
-          return
+        if (modifyHandler(this, rule) === 'abort' || this.DONNOTSEND) {
+          return;
         }
         if (rule.changeUrl) {
-          changeUrlHandler.call(this, rule);
+          changeUrl(this, rule);
         }
         if (rule.changeMethod) {
           this.method = rule.changeMethod;
         }
       }
     }
-    method = this.method;
-    url = this.url;
-    return originalXhrOpen.call(this, method, url, ...rest);
+    return originalXhrOpen.call(this, this.method, this.url, ...rest);
   };
+}
+
+function overrideXhrSend() {
   XMLHttpRequest.prototype.send = function (payload, ...rest) {
     this.payload = payload;
     (async () => {
@@ -136,36 +154,47 @@ export function proxy() {
           if (rule.await) {
             await rule.await.call(this);
           }
-          if (modifyHandler.call(this, rule) === 'abort' || this.DONNOTSEND) {
-            return
+          if (modifyHandler(this, rule) === 'abort' || this.DONNOTSEND) {
+            return;
           }
           if (rule.changePayload) {
-            changePayloadHandler.call(this, rule);
+            changePayload(this, rule);
           }
         }
       }
-      payload = this.payload;
-      originalXhrSend.call(this, payload, ...rest);
+      originalXhrSend.call(this, this.payload, ...rest);
     })();
   };
+}
+
+function overrideSetAttribute() {
   Element.prototype.setAttribute = function (name, value) {
     if (this.tagName === 'INPUT') {
       if (name === 'value' && this.getAttribute('name') === 'expectsPro') {
         value = 'false';
       } else if (name === 'value' && this.getAttribute('name') === 'fileName') {
-        store.cacheStore.setCache('nextDocumentHijackName', value);
+        store.cacheStore.set('nextDocumentHijackName', value);
       }
     }
     originalSetAttribute.call(this, name, value);
-  }
+  };
+}
 
+function overrideFormSubmit() {
   HTMLFormElement.prototype.submit = function () {
     if (/documentTranslation/.test(this.getAttribute('action'))) {
-      downloadDocument.call(this);
+      downloadDocument(this);
     } else {
       originalSubmit.call(this);
     }
-  }
+  };
+}
+
+export function proxy() {
+  overrideXhrOpen();
+  overrideXhrSend();
+  overrideSetAttribute();
+  overrideFormSubmit();
 }
 
 export function unproxy() {

@@ -68,15 +68,26 @@ export function sendMessage(message) {
 
 export async function cleanCookies() {
   await sendMessage({ method: 'cleanIdentifierCookie' })
+  function expires(mins) {
+    var date = new Date()
+    date.setTime(date.getTime() + (mins * 60 * 1000))
+    return date.toUTCString()
+  }
+  document.cookie = "dapSid=" + encodeURIComponent(JSON.stringify({
+    sid: uuid(),
+    lastUpdate: Math.floor(Date.now() / 1000)
+  })) + "; domain=.deepl.com; "
+    + "path=/; expires=" + expires(30) + "; samesite=lax";
+  document.cookie = "dapUid=" + encodeURIComponent(uuid()) + "; domain=.deepl.com; "
+    + "path=/; expires=" + expires(518400) + "; samesite=lax";
   await sendMessage({
     method: 'setHeader',
     params: {
-      urlFilter: location.href,
-      resourceTypes: ['main_frame'],
+      urlFilter: 'www.deepl.com',
+      resourceTypes: ['main_frame', "sub_frame", "xmlhttprequest"],
       id: 2
     }
   });
-  location.reload();
 }
 
 export function uuid() {
