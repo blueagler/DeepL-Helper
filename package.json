@@ -45,7 +45,7 @@
     "@types/react-dom": "^18.2.5",
     "babel-plugin-transform-imports": "^2.0.0",
     "esbuild": "^0.18.2",
-    "rollup": "3.25.1",
+    "rollup": "3.29.5",
     "rollup-plugin-esbuild": "^5.0.0",
     "rollup-plugin-worker": "^3.0.4"
   }
